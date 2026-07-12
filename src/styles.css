@@ -1,4 +1,16 @@
-/* ── Al-Qamh Flour Mills — white & green design system ─────────────────── */
+/* ── Morvarid Wheat Flour — white & green design system ────────────────── */
+
+/* Vazirmatn (https://github.com/rastikerdar/vazirmatn), bundled locally so
+   the Persian UI renders identically everywhere — no network fetch. Variable
+   weight covers the 400–700 range this design uses. */
+@font-face {
+  font-family: 'Vazirmatn';
+  src: url('./assets/fonts/Vazirmatn-Variable.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-style: normal;
+  font-display: swap;
+}
+
 :root {
   /* brand */
   --green-900: #0a4d26;
@@ -350,7 +362,7 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 
 /* ── RTL / Persian ─────────────────────────────────────────────────────── */
 :root[dir="rtl"] {
-  --font: "Vazirmatn", "IRANSans", Tahoma, "Segoe UI", system-ui, sans-serif;
+  --font: "Vazirmatn", Tahoma, "Segoe UI", system-ui, sans-serif;
 }
 :root[dir="rtl"] body { font-size: 13.5px; }
 :root[dir="rtl"] .nav-label,

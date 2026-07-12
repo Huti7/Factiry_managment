@@ -40,7 +40,7 @@ const en = {
   'urg.low': 'Low', 'urg.normal': 'Normal', 'urg.urgent': 'Urgent',
   'sev.critical': 'critical', 'sev.warning': 'warning', 'sev.info': 'info',
   'u.t': 't', 'u.tph': 't/h', 'u.min': 'min', 'u.pct': '%',
-  'common.cancel': 'Cancel', 'common.by': 'By', 'common.when': 'When', 'common.status': 'Status', 'common.open': 'Open',
+  'common.cancel': 'Cancel', 'common.collecting': 'collecting data…', 'common.by': 'By', 'common.when': 'When', 'common.status': 'Status', 'common.open': 'Open',
 
   // alert templates
   'alert.siloLow': '{name} low: {level} t ({pct}% of capacity)',
@@ -353,7 +353,7 @@ const fa = {
   'urg.low': 'کم', 'urg.normal': 'عادی', 'urg.urgent': 'فوری',
   'sev.critical': 'بحرانی', 'sev.warning': 'هشدار', 'sev.info': 'اطلاع',
   'u.t': 'تن', 'u.tph': 'تن/ساعت', 'u.min': 'دقیقه', 'u.pct': '٪',
-  'common.cancel': 'انصراف', 'common.by': 'توسط', 'common.when': 'زمان', 'common.status': 'وضعیت', 'common.open': 'باز کردن',
+  'common.cancel': 'انصراف', 'common.collecting': 'در حال دریافت داده…', 'common.by': 'توسط', 'common.when': 'زمان', 'common.status': 'وضعیت', 'common.open': 'باز کردن',
 
   'alert.siloLow': 'موجودی {name} کم است: {level} تن ({pct}٪ ظرفیت)',
   'alert.lineStopped': '{line} متوقف شد — {machine} — در انتظار گزارش علت',

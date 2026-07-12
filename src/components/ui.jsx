@@ -1,5 +1,6 @@
 import React from 'react'
 import { fmt } from '../utils.js'
+import { useLang } from '../i18n.jsx'
 
 export function Card({ title, right, children, className = '', pad0 = false }) {
   return (
@@ -46,7 +47,8 @@ export function StatusDot({ status }) {
 
 /** Minimal SVG line sparkline. Single green series, hairline reference. */
 export function Sparkline({ points, refValue, min, max, height = 46, width = 220, unit = '', label }) {
-  if (!points || points.length < 2) return <div className="muted small">collecting data…</div>
+  const { t } = useLang()
+  if (!points || points.length < 2) return <div className="muted small">{t('common.collecting')}</div>
   const vals = points.map((p) => p.v)
   const lo = min ?? Math.min(...vals, refValue ?? Infinity) * 0.97
   const hi = max ?? Math.max(...vals, refValue ?? -Infinity) * 1.03
