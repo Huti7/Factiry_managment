@@ -55,7 +55,8 @@ export function staffing(state, now = Date.now()) {
   }
   for (const [dept, required] of Object.entries(state.deptRequired)) {
     const staff = rows.filter((r) => !r.worker.lineId && r.worker.dept === dept)
-    groups.push({ key: dept, name: dept, required, present: staff.filter((r) => r.status !== 'absent').length, absent: staff.filter((r) => r.status === 'absent'), late: staff.filter((r) => r.status === 'late') })
+    // departments are enum keys — the UI renders them via t(`dept.${key}`)
+    groups.push({ key: dept, nameKey: `dept.${dept}`, required, present: staff.filter((r) => r.status !== 'absent').length, absent: staff.filter((r) => r.status === 'absent'), late: staff.filter((r) => r.status === 'late') })
   }
   return groups
 }

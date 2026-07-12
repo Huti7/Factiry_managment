@@ -1,22 +1,24 @@
 // SCADA / gate-machine simulator. The app only READS plant state — this module
 // stands in for the control room and the sensors. Runs a tick every 2 seconds
 // and mutates a cloned state draft (the reducer owns immutability).
+// Alerts are stored as {kind, refId, params} and rendered into the viewer's
+// language by alertText.js, so the feed follows the language switch.
 import { uid, clamp, dayKey } from './utils.js'
 import { CAUSES } from './data/seed.js'
 
 export const TICK_MS = 2000
 const UNEXPLAINED_AFTER_MS = 3 * 60 * 1000 // stop with no reason for 3 min → alert
 
-export function addAlert(draft, { severity, kind, text, section, refId }, now = Date.now()) {
+export function addAlert(draft, { severity, kind, section, refId, params = {} }, now = Date.now()) {
   const dup = draft.alerts.find((a) => !a.acked && a.kind === kind && a.refId === refId)
-  if (dup) { dup.text = text; return dup }
-  const alert = { id: uid('al'), at: now, severity, kind, text, section, refId, acked: false }
+  if (dup) { dup.params = params; return dup }
+  const alert = { id: uid('al'), at: now, severity, kind, section, refId, params, acked: false }
   draft.alerts.unshift(alert)
   if (draft.alerts.length > 200) draft.alerts.length = 200
   return alert
 }
 
-export function stopLine(draft, lineId, machineId, now, source = 'Control room') {
+export function stopLine(draft, lineId, machineId, now, source = 'control-room') {
   const line = draft.lines.find((l) => l.id === lineId)
   if (!line || line.status === 'stopped') return null
   line.status = 'stopped'
@@ -28,11 +30,7 @@ export function stopLine(draft, lineId, machineId, now, source = 'Control room')
     partRequestId: null, resumedAt: null, escalated: false,
   }
   draft.stopReports.unshift(report)
-  const m = draft.machines.find((x) => x.id === machineId)
-  addAlert(draft, {
-    severity: 'warning', kind: 'line-stopped', refId: lineId, section: 'production',
-    text: `${line.name} STOPPED at ${m ? m.name : 'unknown machine'} — reason report pending`,
-  }, now)
+  addAlert(draft, { severity: 'warning', kind: 'line-stopped', refId: lineId, section: 'production', params: { machineId } }, now)
   return report
 }
 
@@ -43,7 +41,7 @@ function siloAlerts(draft, now) {
       addAlert(draft, {
         severity: pctLevel < s.lowPct / 2 ? 'critical' : 'warning',
         kind: 'silo-low', refId: s.id, section: 'silos',
-        text: `${s.name} low: ${Math.round(s.levelT)} t (${Math.round(pctLevel)}% of capacity)`,
+        params: { level: Math.round(s.levelT), pct: Math.round(pctLevel) },
       }, now)
     }
   }
@@ -88,7 +86,7 @@ export function simTick(draft, now = Date.now()) {
       if (extraction < 0.68) {
         addAlert(draft, {
           severity: 'warning', kind: 'yield-drop', refId: ln.id, section: 'production',
-          text: `${ln.name} extraction dropped to ${(extraction * 100).toFixed(1)}% (target 74%)`,
+          params: { ex: Math.round(extraction * 1000) / 10 },
         }, now)
       }
     }
@@ -103,10 +101,9 @@ export function simTick(draft, now = Date.now()) {
   for (const r of draft.stopReports) {
     if (r.status === 'awaiting-reason' && !r.escalated && now - r.stoppedAt > UNEXPLAINED_AFTER_MS) {
       r.escalated = true
-      const m = draft.machines.find((x) => x.id === r.machineId)
       addAlert(draft, {
         severity: 'critical', kind: 'unexplained-stop', refId: r.id, section: 'production',
-        text: `UNEXPLAINED STOP: ${m ? m.name : r.machineId} stopped ${Math.round((now - r.stoppedAt) / 60000)} min ago with no reason submitted`,
+        params: { machineId: r.machineId },
       }, now)
     }
   }
@@ -130,7 +127,7 @@ export function simTick(draft, now = Date.now()) {
       const days = Math.floor((now - inv.dueTs) / 86400e3)
       addAlert(draft, {
         severity: days > 5 ? 'critical' : 'warning', kind: 'payment-overdue', refId: inv.id, section: 'accounting',
-        text: `${inv.id} ${inv.customer} overdue ${days} day${days === 1 ? '' : 's'} — $${balance.toLocaleString()} outstanding`,
+        params: {},
       }, now)
     }
   }
@@ -160,7 +157,7 @@ export function demoEvent(draft, name, now = Date.now()) {
       ln.wheatInTph = ln.rateTph / 0.655
       addAlert(draft, {
         severity: 'warning', kind: 'yield-drop', refId: ln.id, section: 'production',
-        text: `${ln.name} extraction dropped to 65.5% (target 74%)`,
+        params: { ex: 65.5 },
       }, now)
       break
     }

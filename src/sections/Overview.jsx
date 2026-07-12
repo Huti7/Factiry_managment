@@ -1,12 +1,14 @@
 import React from 'react'
-import { useStore, useUser } from '../store.jsx'
+import { useStore } from '../store.jsx'
+import { useLang } from '../i18n.jsx'
+import { alertText } from '../alertText.js'
 import { Tile, Card, StatusDot, Pill, Sparkline } from '../components/ui.jsx'
 import { staffing, stockSummary, receivables } from '../derive.js'
 import { fmt, money, pct, ago } from '../utils.js'
 
 export default function Overview({ goto }) {
   const { state } = useStore()
-  const user = useUser()
+  const { t, L } = useLang()
 
   const targetTotal = state.lines.reduce((a, l) => a + l.targetTpd, 0)
   const produced = state.lines.reduce((a, l) => a + l.producedToday, 0)
@@ -27,56 +29,59 @@ export default function Overview({ goto }) {
   const urgentParts = pendingParts.filter((r) => r.urgency === 'urgent')
 
   const prodPct = (produced / targetTotal) * 100
+  const stationName = (g) => (g.nameKey ? t(g.nameKey) : L(g.name))
 
   return (
     <div className="stack">
       <div className="grid cols-3">
         <Tile
-          label="Production today — whole plant"
-          value={fmt(produced, 0)} unit={`t of ${targetTotal} t target`}
-          refText={<>On pace: <b>{pct(prodPct, 0)}</b> of daily target · {state.lines.length - running.length ? <span className="tile-crit">{state.lines.length - running.length} line stopped</span> : 'all lines running'}</>}
+          label={t('ov.prodToday')}
+          value={fmt(produced, 0)} unit={t('ov.unitTarget', { t: fmt(targetTotal, 0) })}
+          refText={<>{t('ov.pace', { p: pct(prodPct, 0) })} · {state.lines.length - running.length
+            ? <span className="tile-crit">{t('ov.nStopped', { n: fmt(state.lines.length - running.length, 0) })}</span>
+            : t('ov.allRunning')}</>}
           tone={prodPct < 40 ? 'tile-warn' : 'tile-good'}
           progress={prodPct}
         />
         <Tile
-          label="Live extraction (flour ÷ wheat)"
-          value={extraction ? fmt(extraction, 1) : '—'} unit="%"
-          refText={<>Target <b>74%</b> — {extraction == null ? 'no line running' : extraction >= 72 ? 'within range' : 'below range'}</>}
+          label={t('ov.extraction')}
+          value={extraction ? fmt(extraction, 1) : '—'} unit={t('u.pct')}
+          refText={<>{t('ov.targetIs', { t: pct(74, 0) })} — {extraction == null ? t('ov.noLine') : extraction >= 72 ? t('ov.within') : t('ov.below')}</>}
           tone={extraction == null ? '' : extraction >= 72 ? 'tile-good' : extraction >= 69 ? 'tile-warn' : 'tile-crit'}
           progress={extraction ? (extraction / 80) * 100 : 0} progressTick={(74 / 80) * 100}
         />
         <Tile
-          label="Wheat in silos"
-          value={fmt(stock.wheatStock, 0)} unit="t"
-          refText={<>≈ <b>{stock.wheatDays ? fmt(stock.wheatDays, 1) : '—'} days</b> at current milling rate ({fmt(stock.wheatUseTph, 1)} t/h × 20 h)</>}
+          label={t('ov.wheatSilos')}
+          value={fmt(stock.wheatStock, 0)} unit={t('u.t')}
+          refText={t('ov.daysAtRate', { d: stock.wheatDays ? fmt(stock.wheatDays, 1) : '—', r: fmt(stock.wheatUseTph, 1) })}
           tone={stock.wheatDays != null && stock.wheatDays < 5 ? 'tile-warn' : ''}
         />
       </div>
 
       <div className="grid cols-3">
         <Tile
-          label="Staff on site"
-          value={`${totalPresent}`} unit={`of ${totalRequired} required`}
+          label={t('ov.staff')}
+          value={fmt(totalPresent, 0)} unit={t('ov.ofRequired', { n: fmt(totalRequired, 0) })}
           refText={short.length
-            ? <span className="tile-crit">{short.map((s) => `${s.name} short ${s.required - s.present}`).join(' · ')}</span>
-            : 'All lines and departments fully staffed'}
+            ? <span className="tile-crit">{short.map((s) => t('ov.shortOne', { name: stationName(s), n: fmt(s.required - s.present, 0) })).join(' · ')}</span>
+            : t('ov.fullyStaffed')}
           tone={short.length ? 'tile-warn' : 'tile-good'}
           progress={(totalPresent / totalRequired) * 100}
         />
         <Tile
-          label="Receivables outstanding"
+          label={t('ov.recv')}
           value={money(recv.reduce((a, r) => a + r.balance, 0))}
           refText={overdue.length
-            ? <span className="tile-crit">{overdue.length} overdue invoice{overdue.length > 1 ? 's' : ''} · {money(overdueSum)} past due</span>
-            : 'Nothing overdue'}
+            ? <span className="tile-crit">{t('ov.overdueN', { n: fmt(overdue.length, 0), sum: money(overdueSum) })}</span>
+            : t('ov.noOverdue')}
           tone={overdue.length ? 'tile-crit' : 'tile-good'}
         />
         <Tile
-          label="Approvals waiting on you"
-          value={`${pendingParts.length}`} unit="part requests"
+          label={t('ov.approvals')}
+          value={fmt(pendingParts.length, 0)} unit={t('ov.partReqUnit')}
           refText={urgentParts.length
-            ? <span className="tile-crit">{urgentParts.length} marked URGENT — est. {money(pendingParts.reduce((a, r) => a + r.estCost, 0))} total</span>
-            : pendingParts.length ? `Est. ${money(pendingParts.reduce((a, r) => a + r.estCost, 0))} total` : 'Queue is empty'}
+            ? <span className="tile-crit">{t('ov.urgentTotal', { n: fmt(urgentParts.length, 0), sum: money(pendingParts.reduce((a, r) => a + r.estCost, 0)) })}</span>
+            : pendingParts.length ? t('ov.estTotal', { sum: money(pendingParts.reduce((a, r) => a + r.estCost, 0)) }) : t('ov.queueEmpty')}
           tone={urgentParts.length ? 'tile-crit' : pendingParts.length ? 'tile-warn' : 'tile-good'}
         />
       </div>
@@ -86,19 +91,19 @@ export default function Overview({ goto }) {
           const hist = (state.liveHistory[ln.id] || []).map((p) => ({ v: p.rate }))
           const ex = ln.wheatInTph ? (ln.rateTph / ln.wheatInTph) * 100 : 0
           return (
-            <Card key={ln.id} title={<span><StatusDot status={ln.status} /> &nbsp;{ln.name} — {ln.product}</span>}
-              right={<button className="btn sm" onClick={() => goto('production')}>Open</button>}>
+            <Card key={ln.id} title={<span><StatusDot status={ln.status} /> &nbsp;{L(ln.name)} — {t(`product.${ln.product}`)}</span>}
+              right={<button className="btn sm" onClick={() => goto('production')}>{t('common.open')}</button>}>
               {ln.status === 'running' ? (
                 <>
-                  <div className="tile-value tile-good">{fmt(ln.rateTph, 1)}<span className="unit">t/h · extraction {fmt(ex, 1)}%</span></div>
-                  <div className="tile-ref">Today <b>{fmt(ln.producedToday, 0)} t</b> of {ln.targetTpd} t target</div>
+                  <div className="tile-value tile-good">{fmt(ln.rateTph, 1)}<span className="unit">{t('u.tph')} · {t('pr.extraction')} {pct(ex, 1)}</span></div>
+                  <div className="tile-ref">{t('ov.today')} <b>{fmt(ln.producedToday, 0)} {t('u.t')}</b> {t('ov.ofTargetShort', { t: fmt(ln.targetTpd, 0) })}</div>
                   <div className="progress"><i style={{ width: `${Math.min(100, (ln.producedToday / ln.targetTpd) * 100)}%` }} /></div>
-                  <div className="mt"><Sparkline points={hist} refValue={ln.nominalTph} unit=" t/h" label={`${ln.name} output rate trend`} /></div>
+                  <div className="mt"><Sparkline points={hist} refValue={ln.nominalTph} unit=" t/h" label={`${L(ln.name)} output rate trend`} /></div>
                 </>
               ) : (
                 <>
-                  <div className="tile-value tile-crit">STOPPED</div>
-                  <div className="tile-ref">Today <b>{fmt(ln.producedToday, 0)} t</b> of {ln.targetTpd} t target — output halted</div>
+                  <div className="tile-value tile-crit">{t('st.stopped')}</div>
+                  <div className="tile-ref">{t('ov.today')} <b>{fmt(ln.producedToday, 0)} {t('u.t')}</b> {t('ov.ofTargetShort', { t: fmt(ln.targetTpd, 0) })} — {t('ov.outputHalted')}</div>
                   <div className="progress"><i className="crit" style={{ width: `${Math.min(100, (ln.producedToday / ln.targetTpd) * 100)}%` }} /></div>
                 </>
               )}
@@ -108,24 +113,24 @@ export default function Overview({ goto }) {
       </div>
 
       <div className="grid cols-2">
-        <Card title="Produced vs sold vs in stock (flour)" right={<button className="btn sm" onClick={() => goto('orders')}>Orders</button>}>
+        <Card title={t('ov.prodVsSold')} right={<button className="btn sm" onClick={() => goto('orders')}>{t('nav.orders')}</button>}>
           <div className="kv" style={{ gridTemplateColumns: '1fr auto' }}>
-            <dt>Produced today</dt><dd>{fmt(stock.producedToday, 1)} t</dd>
-            <dt>Flour in bins now</dt><dd>{fmt(stock.flourStock, 0)} t</dd>
-            <dt>Bran in bin</dt><dd>{fmt(stock.branStock, 0)} t</dd>
-            <dt>Committed to open orders</dt><dd>{fmt(stock.pendingT, 0)} t pending dispatch</dd>
+            <dt>{t('ov.producedToday')}</dt><dd>{fmt(stock.producedToday, 1)} {t('u.t')}</dd>
+            <dt>{t('ov.flourBins')}</dt><dd>{fmt(stock.flourStock, 0)} {t('u.t')}</dd>
+            <dt>{t('ov.branBin')}</dt><dd>{fmt(stock.branStock, 0)} {t('u.t')}</dd>
+            <dt>{t('ov.committed')}</dt><dd>{t('ov.pendingDispatch', { v: fmt(stock.pendingT, 0) })}</dd>
           </div>
           {stock.pendingT > stock.flourStock + stock.branStock && (
-            <div className="notice warn mt">⚠️ Open orders exceed current stock — production must cover the gap.</div>
+            <div className="notice warn mt">{t('ov.exceeds')}</div>
           )}
         </Card>
-        <Card title="Latest activity" right={<span className="muted small">alert history</span>}>
+        <Card title={t('ov.activity')} right={<span className="muted small">{t('ov.alertHistory')}</span>}>
           <div className="log-list">
             {state.alerts.slice(0, 6).map((a) => (
               <div key={a.id} className="row" style={{ justifyContent: 'space-between', flexWrap: 'nowrap' }}>
                 <span style={{ minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                  <Pill tone={a.severity === 'critical' ? 'red' : a.severity === 'warning' ? 'amber' : 'green'}>{a.severity}</Pill>{' '}
-                  {a.text}
+                  <Pill tone={a.severity === 'critical' ? 'red' : a.severity === 'warning' ? 'amber' : 'green'}>{t(`sev.${a.severity}`)}</Pill>{' '}
+                  {alertText(a, { state, t, L })}
                 </span>
                 <span className="muted small" style={{ flex: '0 0 auto' }}>{ago(a.at)}{a.acked ? ' · ✓' : ''}</span>
               </div>

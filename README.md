@@ -1,8 +1,15 @@
-# Al-Qamh Flour Mills — Owner Command Center
+# آرد گندم مروارید — Morvarid Wheat Flour · Owner Command Center
 
-A management dashboard for a flour factory, built owner-first: the whole plant on
-one screen, every communication routed through the owner, and a reason or an
-approval attached to every significant action.
+A bilingual (Persian/English) management dashboard for a flour factory, built
+owner-first: the whole plant on one screen, every communication routed through
+the owner, and a reason or an approval attached to every significant action.
+
+**فارسی، پیش‌فرض و راست‌به‌چپ.** The app opens in Persian with a full RTL layout,
+Persian digits, Jalali dates, and toman amounts; a toggle in the top bar switches
+to English (LTR, dollars). All data — people, products, machines, customers,
+alerts — is bilingual, and stored alerts re-render in whichever language is
+active. The i18n layer lives in `src/i18n.jsx` (dictionaries) and
+`src/alertText.js` (alert templates).
 
 **The app reads and records only — it never controls machines.** The control room
 keeps command of the plant; this dashboard mirrors it live.
@@ -81,5 +88,6 @@ silo, or a yield dip on demand.
 
 ## Stack
 
-React 18 + Vite, no other runtime dependencies. White/green design system in
-`src/styles.css`; amber/red are reserved for warnings and alerts.
+React 18 + Vite, no other runtime dependencies. White/green design system in `src/styles.css` written with CSS logical
+properties so the same styles serve both RTL and LTR; amber/red are reserved
+for warnings and alerts.

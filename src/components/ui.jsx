@@ -28,7 +28,7 @@ export function Tile({ label, value, unit, refText, tone = '', progress, progres
       {progress != null && (
         <div className="progress">
           <i className={tone === 'tile-crit' ? 'crit' : tone === 'tile-warn' ? 'warn' : ''} style={{ width: `${Math.min(100, progress)}%` }} />
-          {progressTick != null && <span className="tick" style={{ left: `${Math.min(100, progressTick)}%` }} />}
+          {progressTick != null && <span className="tick" style={{ insetInlineStart: `${Math.min(100, progressTick)}%` }} />}
         </div>
       )}
     </div>
@@ -54,14 +54,17 @@ export function Sparkline({ points, refValue, min, max, height = 46, width = 220
   const y = (v) => height - 4 - ((v - lo) / (hi - lo || 1)) * (height - 8)
   const d = points.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.v).toFixed(1)}`).join(' ')
   const last = points[points.length - 1]
+  // time axis always flows left→right, even on an RTL page
   return (
-    <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height }} role="img" aria-label={label || `trend, latest ${fmt(last.v)}${unit}`}>
-      {refValue != null && refValue >= lo && refValue <= hi && (
-        <line x1="2" x2={width - 2} y1={y(refValue)} y2={y(refValue)} stroke="#b9c4bd" strokeWidth="1" strokeDasharray="4 3" />
-      )}
-      <path d={d} fill="none" stroke="#0e7a3d" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-      <circle cx={x(points.length - 1)} cy={y(last.v)} r="3.5" fill="#0e7a3d" stroke="#fff" strokeWidth="1.5" />
-    </svg>
+    <div dir="ltr">
+      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height }} role="img" aria-label={label || `trend, latest ${fmt(last.v)}${unit}`}>
+        {refValue != null && refValue >= lo && refValue <= hi && (
+          <line x1="2" x2={width - 2} y1={y(refValue)} y2={y(refValue)} stroke="#b9c4bd" strokeWidth="1" strokeDasharray="4 3" />
+        )}
+        <path d={d} fill="none" stroke="#0e7a3d" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        <circle cx={x(points.length - 1)} cy={y(last.v)} r="3.5" fill="#0e7a3d" stroke="#fff" strokeWidth="1.5" />
+      </svg>
+    </div>
   )
 }
 

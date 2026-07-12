@@ -1,20 +1,21 @@
 import React, { useState } from 'react'
 import { useStore, useUser, can, PEOPLE } from '../store.jsx'
+import { useLang } from '../i18n.jsx'
 import { Card, Modal, Field, SectionHead, Pill, Tile, Empty } from '../components/ui.jsx'
 import { fmt, money, dateShort, ago } from '../utils.js'
 
 const STATUS_TONE = { pending: 'amber', approved: 'green', rejected: 'red', purchased: 'solid' }
-const URGENCY_TONE = { urgent: 'red', normal: 'gray', low: 'gray' }
 
 export default function Parts({ focusRef }) {
   const { state, dispatch } = useStore()
   const user = useUser()
+  const { t, L } = useLang()
   const [adding, setAdding] = useState(false)
   const [asking, setAsking] = useState(null)
   const [filter, setFilter] = useState('all')
 
-  const machineName = (id) => state.machines.find((m) => m.id === id)?.name || id
-  const who = (id) => PEOPLE.find((p) => p.id === id)?.name || id
+  const machineName = (id) => L(state.machines.find((m) => m.id === id)?.name) || id
+  const who = (id) => L(PEOPLE.find((p) => p.id === id)?.name) || id
 
   const reqs = state.partRequests.filter((r) => filter === 'all' || r.status === filter)
   const pending = state.partRequests.filter((r) => r.status === 'pending')
@@ -31,86 +32,83 @@ export default function Parts({ focusRef }) {
 
   return (
     <div className="stack">
-      <SectionHead
-        title="Spare-Parts Requests"
-        sub="Foreman requests → owner decides. Parts can only be bought after approval. Every request builds the machine's cost history."
-      >
-        {can(user, 'create-part-request') && <button className="btn primary" onClick={() => setAdding(true)}>+ Request a part</button>}
+      <SectionHead title={t('nav.parts')} sub={t('pt.sub')}>
+        {can(user, 'create-part-request') && <button className="btn primary" onClick={() => setAdding(true)}>{t('pt.request')}</button>}
       </SectionHead>
 
       <div className="grid cols-3">
-        <Tile label="Waiting for owner decision" value={`${pending.length}`} unit="requests"
+        <Tile label={t('pt.waiting')} value={fmt(pending.length, 0)} unit={t('pt.requests')}
           refText={pending.filter((r) => r.urgency === 'urgent').length
-            ? <span className="tile-crit">{pending.filter((r) => r.urgency === 'urgent').length} URGENT — owner notified immediately</span>
-            : 'no urgent requests pending'}
+            ? <span className="tile-crit">{t('pt.urgentNote', { n: fmt(pending.filter((r) => r.urgency === 'urgent').length, 0) })}</span>
+            : t('pt.noUrgent')}
           tone={pending.some((r) => r.urgency === 'urgent') ? 'tile-crit' : pending.length ? 'tile-warn' : 'tile-good'} />
-        <Tile label="Pending value" value={money(pending.reduce((a, r) => a + r.estCost, 0))} refText="estimated cost of undecided requests" />
-        <Tile label="Approved, not yet bought" value={`${state.partRequests.filter((r) => r.status === 'approved').length}`} unit="requests"
-          refText="cleared for purchase" tone="tile-good" />
+        <Tile label={t('pt.pendingValue')} value={money(pending.reduce((a, r) => a + r.estCost, 0))} refText={t('pt.pendingSub')} />
+        <Tile label={t('pt.approvedNot')} value={fmt(state.partRequests.filter((r) => r.status === 'approved').length, 0)} unit={t('pt.requests')}
+          refText={t('pt.cleared')} tone="tile-good" />
       </div>
 
-      <Card title="Requests" right={
+      <Card title={t('pt.reqTitle')} right={
         <div className="seg">
           {['all', 'pending', 'approved', 'purchased', 'rejected'].map((s) => (
-            <button key={s} className={filter === s ? 'on' : ''} onClick={() => setFilter(s)}>{s}</button>
+            <button key={s} className={filter === s ? 'on' : ''} onClick={() => setFilter(s)}>{t(`ft.${s}`)}</button>
           ))}
         </div>
       }>
-        {reqs.length === 0 && <Empty>No requests in this view.</Empty>}
+        {reqs.length === 0 && <Empty>{t('pt.noneView')}</Empty>}
         <div className="stack">
           {reqs.map((r) => (
             <div key={r.id} style={{
               border: '1px solid var(--line)', borderRadius: 8, padding: '12px 14px',
               background: focusRef?.refId === r.id ? 'var(--green-25)' : '#fff',
-              borderLeft: r.urgency === 'urgent' && r.status === 'pending' ? '4px solid var(--crit)' : '4px solid var(--green-100)',
+              borderInlineStart: r.urgency === 'urgent' && r.status === 'pending' ? '4px solid var(--crit)' : '4px solid var(--green-100)',
             }}>
               <div className="row" style={{ justifyContent: 'space-between' }}>
                 <div className="row">
                   <b>{r.id}</b>
-                  <Pill tone={STATUS_TONE[r.status]}>{r.status.toUpperCase()}</Pill>
-                  {r.urgency === 'urgent' && <Pill tone={URGENCY_TONE.urgent}>⚡ URGENT</Pill>}
-                  <Pill tone="gray">{r.reason}</Pill>
+                  <Pill tone={STATUS_TONE[r.status]}>{t(`st.${r.status}`)}</Pill>
+                  {r.urgency === 'urgent' && <Pill tone="red">{t('pt.urgentPill')}</Pill>}
+                  <Pill tone="gray">{t(`reason.${r.reason}`)}</Pill>
                 </div>
                 <span className="muted small">{who(r.by)} · {ago(r.at)}</span>
               </div>
               <div className="mt" style={{ display: 'flex', gap: 24, flexWrap: 'wrap' }}>
-                <div><div className="muted small">Machine</div><b>{machineName(r.machineId)}</b></div>
-                <div><div className="muted small">Part</div><b>{r.part}</b></div>
-                <div><div className="muted small">Rough cost</div><b>{money(r.estCost)}</b></div>
+                <div><div className="muted small">{t('pt.machine')}</div><b>{machineName(r.machineId)}</b></div>
+                <div><div className="muted small">{t('pt.part')}</div><b>{L(r.part)}</b></div>
+                <div><div className="muted small">{t('pt.cost')}</div><b>{money(r.estCost)}</b></div>
               </div>
-              {r.note && <div className="muted small mt">“{r.note}”</div>}
+              {r.note && <div className="muted small mt">«{L(r.note)}»</div>}
               <div className="log-list mt">
                 {r.history.map((h, i) => (
-                  <div key={i}>· {dateShort(h.at)} — <b>{h.action}</b> by {who(h.by)}{h.note ? ` — “${h.note}”` : ''}</div>
+                  <div key={i}>· {dateShort(h.at)} — <b>{t(`acn.${h.action}`)}</b> — {who(h.by)}{h.note ? ` — «${L(h.note)}»` : ''}</div>
                 ))}
               </div>
               <div className="row mt">
                 {user.role === 'owner' && r.status === 'pending' && (
                   <>
-                    <button className="btn sm primary" onClick={() => dispatch({ type: 'PART_ACTION', id: r.id, action: 'approved', by: user.id })}>✓ Approve</button>
-                    <button className="btn sm danger" onClick={() => dispatch({ type: 'PART_ACTION', id: r.id, action: 'rejected', by: user.id, note: 'Rejected by owner' })}>✕ Reject</button>
-                    <button className="btn sm" onClick={() => setAsking(r)}>? Ask a question</button>
+                    <button className="btn sm primary" onClick={() => dispatch({ type: 'PART_ACTION', id: r.id, action: 'approved', by: user.id })}>{t('pt.approve')}</button>
+                    <button className="btn sm danger" onClick={() => dispatch({ type: 'PART_ACTION', id: r.id, action: 'rejected', by: user.id, note: t('pt.byOwner') })}>{t('pt.reject')}</button>
+                    <button className="btn sm" onClick={() => setAsking(r)}>{t('pt.ask')}</button>
                   </>
                 )}
                 {user.role === 'owner' && r.status === 'approved' && (
-                  <button className="btn sm primary" onClick={() => dispatch({ type: 'PART_ACTION', id: r.id, action: 'purchased', by: user.id })}>Mark purchased</button>
+                  <button className="btn sm primary" onClick={() => dispatch({ type: 'PART_ACTION', id: r.id, action: 'purchased', by: user.id })}>{t('pt.markPurchased')}</button>
                 )}
-                {r.status === 'pending' && user.role !== 'owner' && <span className="muted small">Waiting for the owner — purchase is blocked until approval.</span>}
+                {r.status === 'pending' && user.role !== 'owner' && <span className="muted small">{t('pt.waitNote')}</span>}
               </div>
             </div>
           ))}
         </div>
       </Card>
 
-      <Card title="Per-machine parts cost history" right={<span className="muted small">approved + purchased requests</span>}>
+      <Card title={t('pt.history')} right={<span className="muted small">{t('pt.histSub')}</span>}>
         <div className="tbl-wrap">
           <table className="tbl">
-            <thead><tr><th>Machine</th><th className="num">Requests</th><th className="num">Total est. cost</th></tr></thead>
+            <thead><tr><th>{t('pt.machine')}</th><th className="num">{t('pt.count')}</th><th className="num">{t('pt.totalCost')}</th></tr></thead>
             <tbody>
               {Object.entries(byMachine).sort((a, b) => b[1].cost - a[1].cost).map(([mid, v]) => (
                 <tr key={mid}>
                   <td><b>{machineName(mid)}</b></td>
-                  <td className="num">{v.count}</td>
+                  <td className="num">{fmt(v.count, 0)}</td>
                   <td className="num"><b>{money(v.cost)}</b></td>
                 </tr>
               ))}
@@ -128,39 +126,40 @@ export default function Parts({ focusRef }) {
 function RequestModal({ onClose }) {
   const { state, dispatch } = useStore()
   const user = useUser()
+  const { t, L } = useLang()
   const [f, setF] = useState({ machineId: state.machines[0].id, part: '', reason: 'worn', urgency: 'normal', estCost: '', note: '' })
   const set = (k) => (e) => setF({ ...f, [k]: e.target.value })
   const ok = f.part && Number(f.estCost) >= 0 && f.estCost !== ''
   return (
-    <Modal title="Request a spare part" sub={f.urgency === 'urgent' ? '⚡ Urgent requests notify the owner immediately.' : 'Goes to the owner for approval before purchase.'} onClose={onClose}
+    <Modal title={t('pt.modalTitle')} sub={f.urgency === 'urgent' ? t('pt.urgentSub') : t('pt.normalSub')} onClose={onClose}
       actions={<>
-        <button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn primary" disabled={!ok} onClick={() => { dispatch({ type: 'ADD_PART_REQUEST', ...f, by: user.id }); onClose() }}>Submit request</button>
+        <button className="btn" onClick={onClose}>{t('common.cancel')}</button>
+        <button className="btn primary" disabled={!ok} onClick={() => { dispatch({ type: 'ADD_PART_REQUEST', ...f, by: user.id }); onClose() }}>{t('pt.submit')}</button>
       </>}>
-      <Field label="Machine">
+      <Field label={t('pt.machine')}>
         <select value={f.machineId} onChange={set('machineId')}>
-          {state.machines.map((m) => <option key={m.id} value={m.id}>{m.name}</option>)}
+          {state.machines.map((m) => <option key={m.id} value={m.id}>{L(m.name)}</option>)}
         </select>
       </Field>
-      <Field label="Part"><input value={f.part} onChange={set('part')} placeholder="e.g. Fluted roll set 250mm" /></Field>
+      <Field label={t('pt.part')}><input value={f.part} onChange={set('part')} placeholder={t('pt.partPh')} /></Field>
       <div className="form-row">
-        <Field label="Reason">
+        <Field label={t('pt.reasonLbl')}>
           <select value={f.reason} onChange={set('reason')}>
-            <option value="worn">Worn</option>
-            <option value="broken">Broken</option>
-            <option value="preventive">Preventive</option>
+            <option value="worn">{t('reason.worn')}</option>
+            <option value="broken">{t('reason.broken')}</option>
+            <option value="preventive">{t('reason.preventive')}</option>
           </select>
         </Field>
-        <Field label="Urgency">
+        <Field label={t('pt.urgency')}>
           <select value={f.urgency} onChange={set('urgency')}>
-            <option value="low">Low</option>
-            <option value="normal">Normal</option>
-            <option value="urgent">Urgent</option>
+            <option value="low">{t('urg.low')}</option>
+            <option value="normal">{t('urg.normal')}</option>
+            <option value="urgent">{t('urg.urgent')}</option>
           </select>
         </Field>
-        <Field label="Rough cost ($)"><input type="number" value={f.estCost} onChange={set('estCost')} /></Field>
+        <Field label={t('pr.roughCost')}><input type="number" value={f.estCost} onChange={set('estCost')} /></Field>
       </div>
-      <Field label="Why it is needed"><textarea rows={2} value={f.note} onChange={set('note')} /></Field>
+      <Field label={t('pt.why')}><textarea rows={2} value={f.note} onChange={set('note')} /></Field>
     </Modal>
   )
 }
@@ -168,14 +167,15 @@ function RequestModal({ onClose }) {
 function AskModal({ req, onClose }) {
   const { dispatch } = useStore()
   const user = useUser()
+  const { t } = useLang()
   const [q, setQ] = useState('')
   return (
-    <Modal title={`Question about ${req.id}`} sub="Sent to the requesting foreman's direct thread and logged on the request." onClose={onClose}
+    <Modal title={t('pt.askTitle', { id: req.id })} sub={t('pt.askSub')} onClose={onClose}
       actions={<>
-        <button className="btn" onClick={onClose}>Cancel</button>
-        <button className="btn primary" disabled={!q} onClick={() => { dispatch({ type: 'PART_ACTION', id: req.id, action: 'question', note: q, by: user.id }); onClose() }}>Send question</button>
+        <button className="btn" onClick={onClose}>{t('common.cancel')}</button>
+        <button className="btn primary" disabled={!q} onClick={() => { dispatch({ type: 'PART_ACTION', id: req.id, action: 'question', note: q, by: user.id }); onClose() }}>{t('pt.sendQ')}</button>
       </>}>
-      <Field label="Your question"><textarea rows={3} value={q} onChange={(e) => setQ(e.target.value)} placeholder="e.g. Can it wait for the maintenance window on Friday?" /></Field>
+      <Field label={t('pt.yourQ')}><textarea rows={3} value={q} onChange={(e) => setQ(e.target.value)} placeholder={t('pt.qPh')} /></Field>
     </Modal>
   )
 }

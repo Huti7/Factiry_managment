@@ -1,9 +1,9 @@
 import React, { createContext, useContext, useEffect, useReducer, useRef } from 'react'
 import { makeSeed, PEOPLE } from './data/seed.js'
-import { simTick, demoEvent, addAlert, stopLine, TICK_MS } from './sim.js'
+import { simTick, demoEvent, addAlert, TICK_MS } from './sim.js'
 import { uid, dayKey, clamp } from './utils.js'
 
-const LS_KEY = 'flourmill-state-v1'
+const LS_KEY = 'flourmill-state-v2'
 
 // ── permissions ─────────────────────────────────────────────────────────────
 const ROLE_CAPS = {
@@ -31,8 +31,10 @@ function withDraft(state, fn) {
   return draft
 }
 
-function notifyOwner(draft, text, section, refId, severity = 'info') {
-  addAlert(draft, { severity, kind: `notify-${uid('n')}`, text, section, refId })
+// info-line to the owner's alerts feed; params carry ids so the text is
+// rendered in whichever language the viewer has active
+function notifyOwner(draft, params, section, refId) {
+  addAlert(draft, { severity: 'info', kind: `notify-${uid('n')}`, section, refId, params })
 }
 
 function ensureThread(draft, a, b) {
@@ -72,18 +74,16 @@ function reducer(state, action) {
       return withDraft(state, (d) => {
         const r = d.stopReports.find((x) => x.id === action.id)
         if (!r) return
-        r.cause = action.cause
+        r.cause = action.cause // cause key, translated at render
         r.note = action.note
         r.reportedAt = now
         r.reportedBy = action.by
         r.status = 'explained'
         if (action.partRequestId) r.partRequestId = action.partRequestId
-        // clear the pending-reason / unexplained alerts for this stop
         d.alerts.forEach((a) => {
-          if ((a.kind === 'unexplained-stop' && a.refId === r.id)) { a.acked = true; a.ackedBy = action.by; a.ackedAt = now }
+          if (a.kind === 'unexplained-stop' && a.refId === r.id) { a.acked = true; a.ackedBy = action.by; a.ackedAt = now }
         })
-        const m = d.machines.find((x) => x.id === r.machineId)
-        notifyOwner(d, `Stop reason for ${m?.name}: ${action.cause}${action.note ? ` — ${action.note}` : ''}`, 'production', r.id)
+        notifyOwner(d, { tkey: 'notif.stopReason', machineId: r.machineId, cause: action.cause, note: action.note }, 'production', r.id)
       })
 
     case 'RESUME_LINE':
@@ -113,22 +113,22 @@ function reducer(state, action) {
         d.alerts.forEach((a) => {
           if (a.kind === 'sensor-drift' && a.refId === s.id) { a.acked = true; a.ackedBy = action.by; a.ackedAt = now }
         })
-        notifyOwner(d, `${s.name} level corrected by foreman: ${Math.round(from)} t → ${Math.round(s.levelT)} t (${action.note || 'no note'})`, 'silos', s.id)
+        notifyOwner(d, { tkey: 'notif.siloFix', siloId: s.id, from, to: s.levelT, note: action.note }, 'silos', s.id)
       })
 
     // ── intake ──────────────────────────────────────────────────────────
     case 'ADD_INTAKE':
       return withDraft(state, (d) => {
         const seq = d.intakes.length + 41
+        const lotNo = `WL-${String(seq).padStart(4, '0')}`
         d.intakes.unshift({
-          id: uid('in'), lotNo: `WL-${String(seq).padStart(4, '0')}`, at: now,
+          id: uid('in'), lotNo, at: now,
           truckPlate: action.truckPlate, supplier: action.supplier, netT: Number(action.netT),
           moisturePct: Number(action.moisturePct), siloId: action.siloId, by: action.by,
         })
         const s = d.silos.find((x) => x.id === action.siloId)
         if (s) s.levelT = Math.min(s.capacityT, s.levelT + Number(action.netT))
-        // attach the new wheat lot to today's open flour lots on both lines
-        d.flourLots.filter((l) => l.open).forEach((l) => l.wheatLots.push(`WL-${String(seq).padStart(4, '0')}`))
+        d.flourLots.filter((l) => l.open).forEach((l) => l.wheatLots.push(lotNo))
       })
 
     // ── lab ─────────────────────────────────────────────────────────────
@@ -136,10 +136,7 @@ function reducer(state, action) {
       return withDraft(state, (d) => {
         d.labTests.unshift({ id: uid('lt'), at: now, by: action.by, ...action.test })
         if (action.test.result === 'fail') {
-          addAlert(d, {
-            severity: 'critical', kind: 'lab-fail', refId: action.test.lotId, section: 'lab',
-            text: `Lab FAIL on lot ${action.test.lotId} — hold dispatch pending owner decision`,
-          })
+          addAlert(d, { severity: 'critical', kind: 'lab-fail', refId: action.test.lotId, section: 'lab', params: {} })
         }
       })
 
@@ -167,7 +164,7 @@ function reducer(state, action) {
         o.dispatchedT += qty
         d.dispatches.unshift({ id: uid('dp'), orderId: o.id, lotId: action.lotId || null, qtyT: qty, at: now, truck: action.truck })
         const fl = d.flourLots.find((l) => l.id === action.lotId)
-        const bin = o.product.includes('Bran') ? d.silos.find((s) => s.kind === 'bran')
+        const bin = o.product === 'bran' ? d.silos.find((s) => s.kind === 'bran')
           : fl ? d.silos.find((s) => s.id === (fl.lineId === 'L1' ? 'S-F1' : 'S-F2')) : null
         if (bin) bin.levelT = Math.max(0, bin.levelT - qty)
       })
@@ -192,7 +189,12 @@ function reducer(state, action) {
         const inv = d.invoices.find((x) => x.id === action.invoiceId)
         if (!inv) return
         inv.paid = Math.min(inv.amount, inv.paid + Number(action.amount))
-        d.acctEntries.unshift({ id: uid('ac'), at: now, kind: 'payment', desc: `Payment received — ${inv.customer} (${inv.id})`, amount: Number(action.amount), source: 'manual', by: action.by, edits: [] })
+        const cn = typeof inv.customer === 'string' ? { en: inv.customer, fa: inv.customer } : inv.customer
+        d.acctEntries.unshift({
+          id: uid('ac'), at: now, kind: 'payment',
+          desc: { en: `Payment received — ${cn.en} (${inv.id})`, fa: `دریافت وجه — ${cn.fa} (${inv.id})` },
+          amount: Number(action.amount), source: 'manual', by: action.by, edits: [],
+        })
         if (inv.paid >= inv.amount) {
           d.alerts.forEach((a) => {
             if (a.kind === 'payment-overdue' && a.refId === inv.id) { a.acked = true; a.ackedBy = action.by; a.ackedAt = now }
@@ -214,14 +216,10 @@ function reducer(state, action) {
           const r = d.stopReports.find((x) => x.id === action.stopReportId)
           if (r) r.partRequestId = id
         }
-        const m = d.machines.find((x) => x.id === action.machineId)
         if (action.urgency === 'urgent') {
-          addAlert(d, {
-            severity: 'critical', kind: 'part-urgent', refId: id, section: 'parts',
-            text: `URGENT part request ${id}: ${action.part} for ${m?.name} (~$${Number(action.estCost).toLocaleString()})`,
-          })
+          addAlert(d, { severity: 'critical', kind: 'part-urgent', refId: id, section: 'parts', params: { cost: Number(action.estCost) } })
         } else {
-          notifyOwner(d, `New part request ${id}: ${action.part} for ${m?.name}`, 'parts', id)
+          notifyOwner(d, { tkey: 'notif.newPart', prId: id }, 'parts', id)
         }
       })
 
@@ -231,7 +229,8 @@ function reducer(state, action) {
         if (!r) return
         if (action.action === 'question') {
           const th = ensureThread(d, 'p-owner', r.by)
-          th.messages.push({ id: uid('m'), from: action.by, at: now, text: `[${r.id} — ${r.part}] ${action.note}`, type: 'message' })
+          const partName = typeof r.part === 'string' ? r.part : `${r.part.fa} / ${r.part.en}`
+          th.messages.push({ id: uid('m'), from: action.by, at: now, text: `[${r.id} — ${partName}] ${action.note}`, type: 'message' })
           r.history.push({ at: now, by: action.by, action: 'question', note: action.note })
         } else {
           if (action.action === 'purchased' && r.status !== 'approved') return // buy only after approval
@@ -268,10 +267,9 @@ function reducer(state, action) {
       return withDraft(state, (d) => {
         const th = ensureThread(d, 'p-owner', action.from)
         th.messages.push({ id: uid('m'), from: action.from, at: now, text: action.text, type: 'flag' })
-        const person = PEOPLE.find((p) => p.id === action.from)
         addAlert(d, {
           severity: 'critical', kind: `flag-${uid('f')}`, refId: th.id, section: 'comms',
-          text: `FLAG from ${person?.name}: ${action.text}`,
+          params: { fromId: action.from, text: action.text },
         })
       })
 

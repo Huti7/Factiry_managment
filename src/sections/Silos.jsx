@@ -1,24 +1,23 @@
 import React, { useState } from 'react'
 import { useStore, useUser, can, PEOPLE } from '../store.jsx'
+import { useLang } from '../i18n.jsx'
 import { Card, Pill, Modal, Field, SectionHead, Empty } from '../components/ui.jsx'
 import { fmt, ago } from '../utils.js'
 
 export default function Silos() {
-  const { state, dispatch } = useStore()
+  const { state } = useStore()
   const user = useUser()
+  const { t, L } = useLang()
   const [override, setOverride] = useState(null)
 
   const groups = [
-    { label: 'Wheat in', kinds: ['wheat'] },
-    { label: 'Flour & bran out', kinds: ['flour', 'bran'] },
+    { label: t('si.wheatIn'), kinds: ['wheat'] },
+    { label: t('si.flourOut'), kinds: ['flour', 'bran'] },
   ]
 
   return (
     <div className="stack">
-      <SectionHead
-        title="Silos / Stock"
-        sub="Live sensor levels. Foreman can confirm or correct a reading when a sensor drifts — every override is logged and reported to the owner."
-      />
+      <SectionHead title={t('nav.silos')} sub={t('si.sub')} />
 
       {groups.map((g) => (
         <div key={g.label}>
@@ -28,22 +27,22 @@ export default function Silos() {
               const p = (s.levelT / s.capacityT) * 100
               const low = p < s.lowPct
               return (
-                <Card key={s.id} title={s.name} right={
-                  s.sensorOk ? <Pill tone="green">sensor OK</Pill> : <Pill tone="amber">⚠ sensor drift</Pill>
+                <Card key={s.id} title={L(s.name)} right={
+                  s.sensorOk ? <Pill tone="green">{t('si.sensorOK')}</Pill> : <Pill tone="amber">{t('si.drift')}</Pill>
                 }>
                   <div className="row" style={{ alignItems: 'stretch' }}>
                     <div style={{ flex: '0 0 64px' }}>
-                      <div className="silo-bar" title={`${fmt(p, 0)}% full`}>
+                      <div className="silo-bar" title={`${fmt(p, 0)}%`}>
                         <div className="silo-low-line" style={{ bottom: `${s.lowPct}%` }} />
                         <div className={`silo-fill ${low ? 'low' : s.kind}`} style={{ height: `${p}%` }} />
                       </div>
                     </div>
                     <div style={{ flex: 1 }}>
-                      <div className={`tile-value ${low ? 'tile-crit' : ''}`}>{fmt(s.levelT, 0)}<span className="unit">t of {s.capacityT} t</span></div>
-                      <div className="tile-ref">{fmt(p, 0)}% full · low alert below <b>{s.lowPct}%</b></div>
-                      {low && <div className="notice warn mt">Below low-level threshold</div>}
+                      <div className={`tile-value ${low ? 'tile-crit' : ''}`}>{fmt(s.levelT, 0)}<span className="unit">{t('si.tOf', { c: fmt(s.capacityT, 0) })}</span></div>
+                      <div className="tile-ref">{t('si.fullPct', { p: fmt(p, 0), n: fmt(s.lowPct, 0) })}</div>
+                      {low && <div className="notice warn mt">{t('si.belowThreshold')}</div>}
                       {can(user, 'silo-override') && (
-                        <button className="btn sm mt" onClick={() => setOverride(s)}>Confirm / correct level</button>
+                        <button className="btn sm mt" onClick={() => setOverride(s)}>{t('si.confirm')}</button>
                       )}
                     </div>
                   </div>
@@ -54,18 +53,18 @@ export default function Silos() {
         </div>
       ))}
 
-      <Card title="Override log" right={<span className="muted small">every manual correction, who and why</span>}>
-        {state.siloOverrides.length === 0 && <Empty>No manual corrections yet.</Empty>}
+      <Card title={t('si.log')} right={<span className="muted small">{t('si.logSub')}</span>}>
+        {state.siloOverrides.length === 0 && <Empty>{t('si.noOverrides')}</Empty>}
         <div className="tbl-wrap">
           <table className="tbl">
-            <thead><tr><th>When</th><th>Silo</th><th>Change</th><th>By</th><th>Reason</th></tr></thead>
+            <thead><tr><th>{t('common.when')}</th><th>{t('si.silo')}</th><th>{t('si.change')}</th><th>{t('common.by')}</th><th>{t('si.reasonReq')}</th></tr></thead>
             <tbody>
               {state.siloOverrides.slice(0, 10).map((o) => (
                 <tr key={o.id}>
                   <td>{ago(o.at)}</td>
-                  <td><b>{state.silos.find((s) => s.id === o.siloId)?.name}</b></td>
-                  <td className="num">{fmt(o.from, 0)} t → <b>{fmt(o.to, 0)} t</b></td>
-                  <td>{PEOPLE.find((p) => p.id === o.by)?.name}</td>
+                  <td><b>{L(state.silos.find((s) => s.id === o.siloId)?.name)}</b></td>
+                  <td className="num"><span className="ltr-nums">{fmt(o.from, 0)} ← {fmt(o.to, 0)}</span> {t('u.t')}</td>
+                  <td>{L(PEOPLE.find((p) => p.id === o.by)?.name)}</td>
                   <td className="muted">{o.note || '—'}</td>
                 </tr>
               ))}
@@ -82,27 +81,28 @@ export default function Silos() {
 function OverrideModal({ silo, onClose }) {
   const { dispatch } = useStore()
   const user = useUser()
+  const { t, L } = useLang()
   const [level, setLevel] = useState(Math.round(silo.levelT))
   const [note, setNote] = useState('')
 
   return (
     <Modal
-      title={`Correct level — ${silo.name}`}
-      sub={`Sensor reads ${fmt(silo.levelT, 0)} t. Enter the confirmed level; the correction is logged and the owner is notified.`}
+      title={t('si.correctTitle', { name: L(silo.name) })}
+      sub={t('si.correctSub', { v: fmt(silo.levelT, 0) })}
       onClose={onClose}
       actions={<>
-        <button className="btn" onClick={onClose}>Cancel</button>
+        <button className="btn" onClick={onClose}>{t('common.cancel')}</button>
         <button className="btn primary" disabled={!note} onClick={() => {
           dispatch({ type: 'SILO_OVERRIDE', siloId: silo.id, levelT: Number(level), note, by: user.id })
           onClose()
-        }}>Save correction</button>
+        }}>{t('si.save')}</button>
       </>}
     >
-      <Field label={`Confirmed level (t, capacity ${silo.capacityT} t)`}>
+      <Field label={t('si.confirmedLevel', { c: fmt(silo.capacityT, 0) })}>
         <input type="number" min="0" max={silo.capacityT} value={level} onChange={(e) => setLevel(e.target.value)} />
       </Field>
-      <Field label="Reason (required)">
-        <input value={note} onChange={(e) => setNote(e.target.value)} placeholder="e.g. manual dip check after sensor drift" />
+      <Field label={t('si.reasonReq')}>
+        <input value={note} onChange={(e) => setNote(e.target.value)} placeholder={t('si.reasonPh')} />
       </Field>
     </Modal>
   )

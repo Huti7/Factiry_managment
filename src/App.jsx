@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react'
-import { useStore, useUser, PEOPLE, NAV_BY_ROLE, can } from './store.jsx'
+import { useStore, useUser, PEOPLE, NAV_BY_ROLE } from './store.jsx'
+import { useLang } from './i18n.jsx'
 import { AlertsStrip } from './components/AlertsStrip.jsx'
 import Overview from './sections/Overview.jsx'
 import Production from './sections/Production.jsx'
@@ -15,31 +16,33 @@ import Comms from './sections/Comms.jsx'
 import Reports from './sections/Reports.jsx'
 
 const SECTIONS = {
-  overview: { label: 'Overview', ico: '▦', comp: Overview },
-  production: { label: 'Live Production', ico: '⚙', comp: Production },
-  silos: { label: 'Silos / Stock', ico: '⛁', comp: Silos },
-  intake: { label: 'Wheat Intake', ico: '⚖', comp: Intake },
-  lab: { label: 'Lab Reports', ico: '⚗', comp: Lab },
-  attendance: { label: 'Attendance', ico: '☷', comp: Attendance },
-  orders: { label: 'Orders / Dispatch', ico: '⇶', comp: Orders },
-  accounting: { label: 'Accounting', ico: '¤', comp: Accounting },
-  parts: { label: 'Spare Parts', ico: '✚', comp: Parts },
-  traceability: { label: 'Traceability', ico: '⛓', comp: Traceability },
-  comms: { label: 'Communications', ico: '✉', comp: Comms },
-  reports: { label: 'Monthly Reports', ico: '⬓', comp: Reports },
+  overview: { ico: '▦', comp: Overview },
+  production: { ico: '⚙', comp: Production },
+  silos: { ico: '⛁', comp: Silos },
+  intake: { ico: '⚖', comp: Intake },
+  lab: { ico: '⚗', comp: Lab },
+  attendance: { ico: '☷', comp: Attendance },
+  orders: { ico: '⇶', comp: Orders },
+  accounting: { ico: '¤', comp: Accounting },
+  parts: { ico: '✚', comp: Parts },
+  traceability: { ico: '⛓', comp: Traceability },
+  comms: { ico: '✉', comp: Comms },
+  reports: { ico: '⬓', comp: Reports },
 }
 
 function Clock() {
+  const { lang } = useLang()
   const [now, setNow] = useState(Date.now())
   useEffect(() => {
     const t = setInterval(() => setNow(Date.now()), 1000)
     return () => clearInterval(t)
   }, [])
   const d = new Date(now)
+  const locale = lang === 'fa' ? 'fa-IR' : 'en-US'
   return (
     <span className="clock">
-      {d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} ·{' '}
-      {d.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
+      {d.toLocaleDateString(locale, { weekday: 'short', month: 'short', day: 'numeric' })} ·{' '}
+      {d.toLocaleTimeString(locale, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: false })}
     </span>
   )
 }
@@ -47,6 +50,7 @@ function Clock() {
 export default function App() {
   const { state, dispatch } = useStore()
   const user = useUser()
+  const { t, L, lang, setLang } = useLang()
   const [section, setSection] = useState('overview')
   const [focusRef, setFocusRef] = useState(null) // deep-link payload from alert clicks
 
@@ -57,7 +61,7 @@ export default function App() {
   const pendingParts = state.partRequests.filter((r) => r.status === 'pending').length
   const awaitingReason = state.stopReports.filter((r) => r.status === 'awaiting-reason').length
   const unreadOrders = state.threads.reduce(
-    (a, t) => a + t.messages.filter((m) => m.type === 'order' && m.status !== 'done' && m.from !== user.id && t.participants.includes(user.id)).length, 0)
+    (a, th) => a + th.messages.filter((m) => m.type === 'order' && m.status !== 'done' && m.from !== user.id && th.participants.includes(user.id)).length, 0)
 
   const goto = (sec, ref = null) => {
     if (!nav.includes(sec)) return
@@ -71,21 +75,21 @@ export default function App() {
         <div className="brand">
           <div className="brand-mark">🌾</div>
           <div>
-            <div className="brand-name">Al-Qamh Mills</div>
-            <div className="brand-sub">Owner Command Center</div>
+            <div className="brand-name">{t('app.name')}</div>
+            <div className="brand-sub">{t('app.sub')}</div>
           </div>
         </div>
         <nav className="nav">
-          <div className="nav-label">Plant</div>
+          <div className="nav-label">{t('nav.group.plant')}</div>
           {nav.filter((k) => ['overview', 'production', 'silos', 'intake', 'lab', 'traceability'].includes(k)).map((k) => (
             <NavItem key={k} k={k} active={active} onClick={goto}
               badge={k === 'production' && awaitingReason ? { n: awaitingReason, amber: true } : null} />
           ))}
-          <div className="nav-label">People & Money</div>
+          <div className="nav-label">{t('nav.group.people')}</div>
           {nav.filter((k) => ['attendance', 'orders', 'accounting', 'reports'].includes(k)).map((k) => (
             <NavItem key={k} k={k} active={active} onClick={goto} />
           ))}
-          <div className="nav-label">Approvals & Comms</div>
+          <div className="nav-label">{t('nav.group.approvals')}</div>
           {nav.filter((k) => ['parts', 'comms'].includes(k)).map((k) => (
             <NavItem key={k} k={k} active={active} onClick={goto}
               badge={k === 'parts' && user.role === 'owner' && pendingParts ? { n: pendingParts }
@@ -93,27 +97,29 @@ export default function App() {
           ))}
         </nav>
         <div style={{ padding: '10px 12px', borderTop: '1px solid var(--line-soft)' }}>
-          <div className="nav-label" style={{ padding: '0 0 6px' }}>Viewing as</div>
+          <div className="nav-label" style={{ padding: '0 0 6px' }}>{t('side.viewingAs')}</div>
           <select
             style={{ width: '100%', padding: '7px 8px', border: '1px solid var(--line)', borderRadius: 7, font: 'inherit' }}
             value={user.id}
             onChange={(e) => dispatch({ type: 'SET_USER', userId: e.target.value })}
           >
-            {PEOPLE.map((p) => <option key={p.id} value={p.id}>{p.name} — {p.title}</option>)}
+            {PEOPLE.map((p) => <option key={p.id} value={p.id}>{L(p.name)} — {t(p.titleKey)}</option>)}
           </select>
-          <div className="muted small" style={{ marginTop: 8 }}>
-            Role demo switch. Each role sees only its own sections and actions.
-          </div>
+          <div className="muted small" style={{ marginTop: 8 }}>{t('side.roleNote')}</div>
         </div>
       </aside>
 
       <div className="main">
         <div className="topbar">
-          <h1>{SECTIONS[active].label}</h1>
-          <span className="pill green"><span className="dot run pulse" /> SCADA live</span>
-          <span className="pill gray">Read-only mirror — control room keeps command</span>
+          <h1>{t(`nav.${active}`)}</h1>
+          <span className="pill green"><span className="dot run pulse" /> {t('top.live')}</span>
+          <span className="pill gray">{t('top.readonly')}</span>
           <div className="spacer" />
-          <DemoMenu dispatch={dispatch} />
+          <div className="seg" role="group" aria-label="Language">
+            <button className={lang === 'fa' ? 'on' : ''} onClick={() => setLang('fa')}>فارسی</button>
+            <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
+          </div>
+          <DemoMenu dispatch={dispatch} t={t} />
           <Clock />
         </div>
         <AlertsStrip goto={goto} />
@@ -128,30 +134,31 @@ export default function App() {
 }
 
 function NavItem({ k, active, onClick, badge }) {
+  const { t } = useLang()
   return (
     <button className={`nav-item ${active === k ? 'active' : ''}`} onClick={() => onClick(k)}>
       <span className="nav-ico">{SECTIONS[k].ico}</span>
-      {SECTIONS[k].label}
+      {t(`nav.${k}`)}
       {badge && <span className={`nav-badge ${badge.amber ? 'amber' : ''}`}>{badge.n}</span>}
     </button>
   )
 }
 
-function DemoMenu({ dispatch }) {
+function DemoMenu({ dispatch, t }) {
   const [open, setOpen] = useState(false)
   const fire = (name) => { dispatch({ type: 'DEMO_EVENT', name }); setOpen(false) }
   return (
     <span style={{ position: 'relative' }}>
-      <button className="btn sm" onClick={() => setOpen(!open)}>⚡ Simulate</button>
+      <button className="btn sm" onClick={() => setOpen(!open)}>{t('top.simulate')}</button>
       {open && (
         <div style={{
-          position: 'absolute', right: 0, top: '110%', zIndex: 50, background: '#fff',
-          border: '1px solid var(--line)', borderRadius: 8, boxShadow: 'var(--shadow)', minWidth: 210, padding: 6,
+          position: 'absolute', insetInlineEnd: 0, top: '110%', zIndex: 50, background: '#fff',
+          border: '1px solid var(--line)', borderRadius: 8, boxShadow: 'var(--shadow)', minWidth: 220, padding: 6,
         }}>
-          <button className="nav-item" onClick={() => fire('line-stop')}>Control-room line stop</button>
-          <button className="nav-item" onClick={() => fire('silo-drain')}>Wheat silo runs low</button>
-          <button className="nav-item" onClick={() => fire('yield-dip')}>Extraction yield dip</button>
-          <button className="nav-item" onClick={() => { dispatch({ type: 'RESET' }); setOpen(false) }}>↺ Reset demo data</button>
+          <button className="nav-item" onClick={() => fire('line-stop')}>{t('sim.lineStop')}</button>
+          <button className="nav-item" onClick={() => fire('silo-drain')}>{t('sim.siloDrain')}</button>
+          <button className="nav-item" onClick={() => fire('yield-dip')}>{t('sim.yieldDip')}</button>
+          <button className="nav-item" onClick={() => { dispatch({ type: 'RESET' }); setOpen(false) }}>{t('sim.reset')}</button>
         </div>
       )}
     </span>
