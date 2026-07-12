@@ -90,7 +90,7 @@ export default function Parts({ focusRef }) {
                     <button className="btn sm" onClick={() => setAsking(r)}>{t('pt.ask')}</button>
                   </>
                 )}
-                {user.role === 'owner' && r.status === 'approved' && (
+                {(user.role === 'owner' || can(user, 'mark-purchased')) && r.status === 'approved' && (
                   <button className="btn sm primary" onClick={() => dispatch({ type: 'PART_ACTION', id: r.id, action: 'purchased', by: user.id })}>{t('pt.markPurchased')}</button>
                 )}
                 {r.status === 'pending' && user.role !== 'owner' && <span className="muted small">{t('pt.waitNote')}</span>}

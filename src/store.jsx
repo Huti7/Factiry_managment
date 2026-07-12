@@ -3,7 +3,7 @@ import { makeSeed, PEOPLE } from './data/seed.js'
 import { simTick, demoEvent, addAlert, TICK_MS } from './sim.js'
 import { uid, dayKey, clamp } from './utils.js'
 
-const LS_KEY = 'flourmill-state-v2'
+const LS_KEY = 'flourmill-state-v3'
 
 // ── permissions ─────────────────────────────────────────────────────────────
 const ROLE_CAPS = {
@@ -11,6 +11,9 @@ const ROLE_CAPS = {
   foreman: ['silo-override', 'add-intake', 'correct-attendance', 'create-part-request', 'stop-reason', 'add-dispatch', 'raise-flag'],
   lab: ['add-lab', 'raise-flag'],
   accountant: ['add-acct', 'edit-acct', 'record-payment', 'add-order', 'add-dispatch', 'export-reports', 'raise-flag'],
+  sales: ['add-order', 'add-dispatch', 'raise-flag'],
+  purchasing: ['mark-purchased', 'raise-flag'],
+  scale: ['add-intake', 'raise-flag'],
 }
 
 export const NAV_BY_ROLE = {
@@ -18,6 +21,9 @@ export const NAV_BY_ROLE = {
   foreman: ['overview', 'production', 'silos', 'intake', 'attendance', 'parts', 'traceability', 'comms'],
   lab: ['overview', 'production', 'lab', 'traceability', 'comms'],
   accountant: ['overview', 'orders', 'accounting', 'comms', 'reports'],
+  sales: ['overview', 'orders', 'traceability', 'comms'],
+  purchasing: ['overview', 'parts', 'comms'],
+  scale: ['overview', 'intake', 'comms'],
 }
 
 export function can(user, cap) {

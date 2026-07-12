@@ -6,12 +6,16 @@ import { uid, dayKey } from '../utils.js'
 
 const DAY = 24 * 3600 * 1000
 
+// Real plant staff. The foreman oversees both mill lines (no lineId), so his
+// permissions cover the whole production floor.
 export const PEOPLE = [
-  { id: 'p-owner', name: { en: 'Haj Karim Ahmadi', fa: 'حاج کریم احمدی' }, role: 'owner', titleKey: 'title.owner' },
-  { id: 'p-fore1', name: { en: 'Saman Azizi', fa: 'سامان عزیزی' }, role: 'foreman', titleKey: 'title.foreman1', lineId: 'L1' },
-  { id: 'p-fore2', name: { en: 'Davood Nasri', fa: 'داوود نصری' }, role: 'foreman', titleKey: 'title.foreman2', lineId: 'L2' },
-  { id: 'p-lab', name: { en: 'Leila Haddadi', fa: 'لیلا حدادی' }, role: 'lab', titleKey: 'title.lab' },
-  { id: 'p-acct', name: { en: 'Neda Farahani', fa: 'ندا فراهانی' }, role: 'accountant', titleKey: 'title.acct' },
+  { id: 'p-owner', name: { en: 'Arash Pir Tarighat', fa: 'آرش پیر طریقت' }, role: 'owner', titleKey: 'title.owner' },
+  { id: 'p-fore1', name: { en: 'Bagher', fa: 'باقر' }, role: 'foreman', titleKey: 'title.foreman' },
+  { id: 'p-lab', name: { en: 'Ms. Shangarain', fa: 'خانم شانگراین' }, role: 'lab', titleKey: 'title.lab' },
+  { id: 'p-acct', name: { en: 'Negin Pir Tarighat', fa: 'نگین پیر طریقت' }, role: 'accountant', titleKey: 'title.acct' },
+  { id: 'p-sales', name: { en: 'Reza Shirmohammad', fa: 'رضا شیرمحمد' }, role: 'sales', titleKey: 'title.sales' },
+  { id: 'p-buy', name: { en: 'Amir Mostaghimi', fa: 'امیر مستقیمی' }, role: 'purchasing', titleKey: 'title.buy' },
+  { id: 'p-scale', name: { en: 'Behnam', fa: 'بهنام' }, role: 'scale', titleKey: 'title.scale' },
 ]
 
 export const CAUSES = ['breakdown', 'maintenance', 'cleaning', 'wheatShortage', 'shiftEnd', 'power']
@@ -124,7 +128,7 @@ export function makeSeed(now = Date.now()) {
         netT: Math.round((22 + Math.random() * 16) * 10) / 10,
         moisturePct: Math.round((10.5 + Math.random() * 3.4) * 10) / 10,
         siloId: ['S-W1', 'S-W2', 'S-W3'][Math.floor(Math.random() * 3)],
-        by: 'M-WB001',
+        by: 'p-scale',
       })
     }
   }
@@ -236,8 +240,8 @@ export function makeSeed(now = Date.now()) {
       part: { en: 'Sifter sieve frames ×6', fa: 'قاب الک ×۶' }, reason: 'preventive',
       urgency: 'low', estCost: 620,
       note: { en: 'Scheduled replacement window next month.', fa: 'تعویض برنامه‌ای در پنجرهٔ تعمیرات ماه آینده.' },
-      status: 'pending', by: 'p-fore2', at: now - 26 * 3600e3,
-      history: [{ at: now - 26 * 3600e3, by: 'p-fore2', action: 'submitted' }],
+      status: 'pending', by: 'p-fore1', at: now - 26 * 3600e3,
+      history: [{ at: now - 26 * 3600e3, by: 'p-fore1', action: 'submitted' }],
     },
     {
       id: 'PR-103', machineId: 'M-CL010',
@@ -248,17 +252,17 @@ export function makeSeed(now = Date.now()) {
       history: [
         { at: now - 9 * DAY, by: 'p-fore1', action: 'submitted' },
         { at: now - 9 * DAY + 3600e3, by: 'p-owner', action: 'approved' },
-        { at: now - 7 * DAY, by: 'p-owner', action: 'purchased', note: { en: 'Local supplier, fitted same day.', fa: 'تأمین‌کنندهٔ داخلی؛ همان روز نصب شد.' } },
+        { at: now - 7 * DAY, by: 'p-buy', action: 'purchased', note: { en: 'Local supplier, fitted same day.', fa: 'تأمین‌کنندهٔ داخلی؛ همان روز نصب شد.' } },
       ],
     },
     {
       id: 'PR-101', machineId: 'M-PK300',
       part: { en: 'Stitching head assembly', fa: 'مجموعهٔ سردوخت کیسه' }, reason: 'worn',
-      urgency: 'normal', estCost: 1150, note: '', status: 'purchased', by: 'p-fore2', at: now - 21 * DAY,
+      urgency: 'normal', estCost: 1150, note: '', status: 'purchased', by: 'p-fore1', at: now - 21 * DAY,
       history: [
-        { at: now - 21 * DAY, by: 'p-fore2', action: 'submitted' },
+        { at: now - 21 * DAY, by: 'p-fore1', action: 'submitted' },
         { at: now - 20 * DAY, by: 'p-owner', action: 'approved' },
-        { at: now - 16 * DAY, by: 'p-owner', action: 'purchased' },
+        { at: now - 16 * DAY, by: 'p-buy', action: 'purchased' },
       ],
     },
     {
@@ -266,9 +270,9 @@ export function makeSeed(now = Date.now()) {
       part: { en: 'Feed gate servo', fa: 'سروو دریچهٔ خوراک' }, reason: 'broken',
       urgency: 'urgent', estCost: 900,
       note: { en: 'Requested twice, second unit also failed.', fa: 'دوبار درخواست شده؛ واحد دوم هم سوخت.' },
-      status: 'rejected', by: 'p-fore2', at: now - 15 * DAY,
+      status: 'rejected', by: 'p-fore1', at: now - 15 * DAY,
       history: [
-        { at: now - 15 * DAY, by: 'p-fore2', action: 'submitted' },
+        { at: now - 15 * DAY, by: 'p-fore1', action: 'submitted' },
         { at: now - 14 * DAY, by: 'p-owner', action: 'rejected', note: { en: 'Maintenance to inspect wiring first — two failures in a month is not the servo.', fa: 'اول تعمیرات سیم‌کشی را بازرسی کند — دو خرابی در یک ماه کار سروو نیست.' } },
       ],
     },
@@ -303,7 +307,7 @@ export function makeSeed(now = Date.now()) {
       id: uid('sr'), machineId: 'M-SF210', lineId: 'L2', stoppedAt: now - 1 * DAY - 5 * 3600e3,
       resumedAt: now - 1 * DAY - 4.2 * 3600e3, status: 'resolved', cause: 'cleaning',
       note: { en: 'Weekly sieve cleaning.', fa: 'نظافت هفتگی الک‌ها.' },
-      reportedAt: now - 1 * DAY - 5 * 3600e3 + 2 * 60000, reportedBy: 'p-fore2', partRequestId: null,
+      reportedAt: now - 1 * DAY - 5 * 3600e3 + 2 * 60000, reportedBy: 'p-fore1', partRequestId: null,
     },
   ]
 
@@ -333,7 +337,6 @@ export function makeSeed(now = Date.now()) {
   // Pre-approved safety pair: lab ↔ both production foremen
   const links = [
     { id: uid('lk'), a: 'p-lab', b: 'p-fore1', scope: 'permanent', preapproved: true, task: { en: 'Quality ↔ production (safety pair)', fa: 'کیفیت ↔ تولید (جفت ایمنی)' }, grantedAt: now - 90 * DAY },
-    { id: uid('lk'), a: 'p-lab', b: 'p-fore2', scope: 'permanent', preapproved: true, task: { en: 'Quality ↔ production (safety pair)', fa: 'کیفیت ↔ تولید (جفت ایمنی)' }, grantedAt: now - 90 * DAY },
   ]
 
   const alerts = [

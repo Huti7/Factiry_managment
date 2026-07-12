@@ -23,8 +23,9 @@ const en = {
   'alerts.label': 'Alerts', 'alerts.allClear': '✓ All clear — no active alerts',
   'alerts.ackAll': 'Acknowledge all', 'alerts.ack': 'Acknowledge', 'alerts.openHint': 'Open the related section',
 
-  'title.owner': 'Owner / Head Manager', 'title.foreman1': 'Foreman — Mill Line 1',
-  'title.foreman2': 'Foreman — Mill Line 2', 'title.lab': 'Lab Technician', 'title.acct': 'Accountant',
+  'title.owner': 'Owner / Head Manager', 'title.foreman': 'Foreman',
+  'title.lab': 'Lab Technician', 'title.acct': 'Accountant',
+  'title.sales': 'Sales Manager', 'title.buy': 'Purchasing Manager', 'title.scale': 'Weighbridge Operator',
 
   'product.zero': 'Zero Flour (00)', 'product.whole': 'Whole Flour (82%)', 'product.bran': 'Bran',
   'dept.milling': 'Milling', 'dept.intake': 'Intake & Cleaning', 'dept.packing': 'Packing & Dispatch', 'dept.maintenance': 'Maintenance',
@@ -336,8 +337,9 @@ const fa = {
   'alerts.label': 'هشدارها', 'alerts.allClear': '✓ همه‌چیز مرتب است — هشدار فعالی نیست',
   'alerts.ackAll': 'تأیید همه', 'alerts.ack': 'تأیید', 'alerts.openHint': 'باز کردن بخش مربوط',
 
-  'title.owner': 'مالک / مدیر ارشد', 'title.foreman1': 'سرشیفت — خط آسیاب ۱',
-  'title.foreman2': 'سرشیفت — خط آسیاب ۲', 'title.lab': 'کارشناس آزمایشگاه', 'title.acct': 'حسابدار',
+  'title.owner': 'مدیر / مالک', 'title.foreman': 'سرکارگر',
+  'title.lab': 'تکنسین آزمایشگاه', 'title.acct': 'حسابدار',
+  'title.sales': 'مسئول فروش', 'title.buy': 'مسئول خرید', 'title.scale': 'مسئول باسکول',
 
   'product.zero': 'آرد نول', 'product.whole': 'آرد سبوس‌دار (۸۲٪)', 'product.bran': 'سبوس',
   'dept.milling': 'آسیاب‌بانی', 'dept.intake': 'تخلیه و بوجاری', 'dept.packing': 'کیسه‌گیری و ارسال', 'dept.maintenance': 'تعمیرات',

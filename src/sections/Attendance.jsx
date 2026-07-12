@@ -20,8 +20,10 @@ export default function Attendance() {
   const late = rows.filter((r) => r.status === 'late')
   const stationName = (g) => (g.nameKey ? t(g.nameKey) : L(g.name))
 
-  // foreman can only correct records on their own line
-  const canFix = (w) => can(user, 'correct-attendance') && (user.role !== 'foreman' || user.lineId === w.lineId || w.lineId == null)
+  // a line-scoped foreman corrects only his own line; a plant-wide foreman
+  // (no lineId, like Bagher) corrects everyone
+  const canFix = (w) => can(user, 'correct-attendance') &&
+    (user.role !== 'foreman' || user.lineId == null || user.lineId === w.lineId || w.lineId == null)
 
   return (
     <div className="stack">
