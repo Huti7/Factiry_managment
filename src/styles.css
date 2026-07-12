@@ -369,3 +369,24 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 :root[dir="rtl"] .alert-strip-label,
 :root[dir="rtl"] .tbl th { letter-spacing: 0; }
 .ltr-nums { direction: ltr; unicode-bidi: embed; }
+
+/* ── digital twin ──────────────────────────────────────────────────────── */
+.twin-grid { display: grid; grid-template-columns: 1fr 310px; gap: 14px; align-items: start; }
+@media (max-width: 1100px) { .twin-grid { grid-template-columns: 1fr; } }
+.twin-svg { width: 100%; height: auto; display: block; }
+.twin-svg text { font-family: inherit; fill: var(--ink); }
+.twin-svg .lbl { font-size: 11px; fill: var(--ink-2); }
+.twin-svg .code { font-size: 10px; fill: var(--ink-3); }
+.twin-svg .rate { font-size: 11px; font-weight: 700; fill: var(--green-800); }
+.node { cursor: pointer; }
+.node .box { fill: #fff; stroke: var(--line); stroke-width: 1.5; transition: stroke 0.3s; }
+.node:hover .box { stroke: var(--green-600); filter: drop-shadow(0 1px 3px rgba(14,122,61,0.25)); }
+.node.sel .box { stroke: var(--green-700); stroke-width: 2.5; }
+.node.run .box { stroke: #bfe3cd; }
+.node.stop .box { stroke: var(--crit); stroke-width: 2; }
+.pipe { stroke: #dfe7e2; stroke-width: 6; fill: none; stroke-linecap: round; }
+.pipe-live { stroke: var(--green-500); stroke-width: 3; stroke-dasharray: 2 9; fill: none;
+  stroke-linecap: round; animation: pipeflow 0.9s linear infinite; }
+.pipe-live.bran { stroke: var(--green-800); }
+@keyframes pipeflow { to { stroke-dashoffset: -11; } }
+@media (prefers-reduced-motion: reduce) { .pipe-live, .pulse { animation: none; } }

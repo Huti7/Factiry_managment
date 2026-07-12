@@ -17,8 +17,8 @@ const ROLE_CAPS = {
 }
 
 export const NAV_BY_ROLE = {
-  owner: ['overview', 'production', 'silos', 'intake', 'lab', 'attendance', 'orders', 'accounting', 'parts', 'traceability', 'comms', 'reports'],
-  foreman: ['overview', 'production', 'silos', 'intake', 'attendance', 'parts', 'traceability', 'comms'],
+  owner: ['overview', 'twin', 'production', 'silos', 'intake', 'lab', 'attendance', 'orders', 'accounting', 'parts', 'traceability', 'comms', 'reports'],
+  foreman: ['overview', 'twin', 'production', 'silos', 'intake', 'attendance', 'parts', 'traceability', 'comms'],
   lab: ['overview', 'production', 'lab', 'traceability', 'comms'],
   accountant: ['overview', 'orders', 'accounting', 'comms', 'reports'],
   sales: ['overview', 'orders', 'traceability', 'comms'],

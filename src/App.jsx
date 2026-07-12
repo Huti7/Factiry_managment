@@ -3,6 +3,7 @@ import { useStore, useUser, PEOPLE, NAV_BY_ROLE } from './store.jsx'
 import { useLang } from './i18n.jsx'
 import { AlertsStrip } from './components/AlertsStrip.jsx'
 import Overview from './sections/Overview.jsx'
+import Twin from './sections/Twin.jsx'
 import Production from './sections/Production.jsx'
 import Silos from './sections/Silos.jsx'
 import Intake from './sections/Intake.jsx'
@@ -17,6 +18,7 @@ import Reports from './sections/Reports.jsx'
 
 const SECTIONS = {
   overview: { ico: '▦', comp: Overview },
+  twin: { ico: '⬢', comp: Twin },
   production: { ico: '⚙', comp: Production },
   silos: { ico: '⛁', comp: Silos },
   intake: { ico: '⚖', comp: Intake },
@@ -81,7 +83,7 @@ export default function App() {
         </div>
         <nav className="nav">
           <div className="nav-label">{t('nav.group.plant')}</div>
-          {nav.filter((k) => ['overview', 'production', 'silos', 'intake', 'lab', 'traceability'].includes(k)).map((k) => (
+          {nav.filter((k) => ['overview', 'twin', 'production', 'silos', 'intake', 'lab', 'traceability'].includes(k)).map((k) => (
             <NavItem key={k} k={k} active={active} onClick={goto}
               badge={k === 'production' && awaitingReason ? { n: awaitingReason, amber: true } : null} />
           ))}
