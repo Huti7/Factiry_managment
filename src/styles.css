@@ -379,14 +379,62 @@ table.tbl { width: 100%; border-collapse: collapse; font-size: 13px; }
 .twin-svg .code { font-size: 10px; fill: var(--ink-3); }
 .twin-svg .rate { font-size: 11px; font-weight: 700; fill: var(--green-800); }
 .node { cursor: pointer; }
-.node .box { fill: #fff; stroke: var(--line); stroke-width: 1.5; transition: stroke 0.3s; }
+.node .box { fill: var(--surface); stroke: var(--line); stroke-width: 1.5; transition: stroke 0.3s; }
 .node:hover .box { stroke: var(--green-600); filter: drop-shadow(0 1px 3px rgba(14,122,61,0.25)); }
 .node.sel .box { stroke: var(--green-700); stroke-width: 2.5; }
 .node.run .box { stroke: #bfe3cd; }
 .node.stop .box { stroke: var(--crit); stroke-width: 2; }
-.pipe { stroke: #dfe7e2; stroke-width: 6; fill: none; stroke-linecap: round; }
+.pipe { stroke: var(--line); stroke-width: 6; fill: none; stroke-linecap: round; }
 .pipe-live { stroke: var(--green-500); stroke-width: 3; stroke-dasharray: 2 9; fill: none;
   stroke-linecap: round; animation: pipeflow 0.9s linear infinite; }
 .pipe-live.bran { stroke: var(--green-800); }
 @keyframes pipeflow { to { stroke-dashoffset: -11; } }
 @media (prefers-reduced-motion: reduce) { .pipe-live, .pulse { animation: none; } }
+
+/* ── dark theme (token overrides only — components read the tokens) ─────── */
+:root[data-theme="dark"] {
+  --green-800: #8fd9ae;
+  --green-700: #1e9e57;
+  --green-600: #2eb368;
+  --green-500: #2ea583;
+  --green-100: #24422f;
+  --green-50:  #1a2f22;
+  --green-25:  #17251c;
+
+  --ok:       #2eb368;
+  --warn:     #ffc266;
+  --warn-bg:  #33270f;
+  --warn-hue: #d99a1e;
+  --crit:     #ef7b74;
+  --crit-bg:  #3a1b1b;
+
+  --ink:        #e9f0ea;
+  --ink-2:      #aebbb1;
+  --ink-3:      #7c887f;
+  --line:       #2b342e;
+  --line-soft:  #232b26;
+  --surface:    #182019;
+  --page:       #111713;
+  --shadow: 0 1px 2px rgba(0, 0, 0, 0.35), 0 2px 10px rgba(0, 0, 0, 0.3);
+}
+:root[data-theme="dark"] .alert-chip.critical { border-color: #4a2626; }
+:root[data-theme="dark"] .alert-chip.warning  { border-color: #453413; }
+:root[data-theme="dark"] .nav-badge.amber { color: #1d1503; }
+:root[data-theme="dark"] ::-webkit-scrollbar-thumb { background: #37423b; border-color: var(--page); }
+:root[data-theme="dark"] .btn.danger { border-color: #4a2626; }
+:root[data-theme="dark"] .notice.warn { border-color: #453413; }
+:root[data-theme="dark"] .msg.mine { background: var(--green-700); }
+:root[data-theme="dark"] .msg.mine.order-msg { background: var(--green-50); }
+
+/* ── login ─────────────────────────────────────────────────────────────── */
+.login-veil {
+  min-height: 100vh; display: grid; place-items: center;
+  background: var(--page); padding: 20px; position: relative;
+}
+.login-corner { position: absolute; top: 16px; inset-inline-end: 18px; display: flex; gap: 8px; }
+.login-card {
+  width: 100%; max-width: 400px;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: 14px; box-shadow: var(--shadow); padding: 24px 24px 18px;
+}
+.login-demo { margin-top: 16px; border-top: 1px solid var(--line-soft); padding-top: 12px; }

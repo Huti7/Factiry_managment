@@ -11,6 +11,13 @@ alerts — is bilingual, and stored alerts re-render in whichever language is
 active. The i18n layer lives in `src/i18n.jsx` (dictionaries) and
 `src/alertText.js` (alert templates).
 
+**Sign-in required.** The app is gated by a login screen with one account per
+staff member; the signed-in identity drives every permission (demo credentials
+are listed on the login screen, password `1234` — client-side demo auth in
+`src/auth.js`, to be replaced by a real backend in production). A **light/dark
+theme** toggle sits in the top bar; both themes are token-driven from
+`src/styles.css`.
+
 **The app reads and records only — it never controls machines.** The control room
 keeps command of the plant; this dashboard mirrors it live.
 

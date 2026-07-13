@@ -2,6 +2,9 @@ import React, { useEffect, useState } from 'react'
 import { useStore, useUser, PEOPLE, NAV_BY_ROLE } from './store.jsx'
 import { useLang } from './i18n.jsx'
 import { AlertsStrip } from './components/AlertsStrip.jsx'
+import { Login } from './components/Login.jsx'
+import { loadSession, saveSession } from './auth.js'
+import { initials } from './utils.js'
 import Overview from './sections/Overview.jsx'
 import Twin from './sections/Twin.jsx'
 import Production from './sections/Production.jsx'
@@ -55,6 +58,31 @@ export default function App() {
   const { t, L, lang, setLang } = useLang()
   const [section, setSection] = useState('overview')
   const [focusRef, setFocusRef] = useState(null) // deep-link payload from alert clicks
+  const [session, setSession] = useState(() => loadSession())
+  const [theme, setTheme] = useState(() => {
+    try { return localStorage.getItem('flourmill-theme') || 'light' } catch { return 'light' }
+  })
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    try { localStorage.setItem('flourmill-theme', theme) } catch { /* private mode */ }
+  }, [theme])
+
+  // keep the acting user in sync with the signed-in session
+  useEffect(() => {
+    if (session && state.currentUserId !== session) dispatch({ type: 'SET_USER', userId: session })
+  }, [session])
+
+  const login = (personId) => {
+    dispatch({ type: 'SET_USER', userId: personId })
+    saveSession(personId)
+    setSession(personId)
+    setSection('overview')
+  }
+  const logout = () => {
+    saveSession(null)
+    setSession(null)
+  }
 
   const nav = NAV_BY_ROLE[user.role] || []
   const active = nav.includes(section) ? section : 'overview'
@@ -70,6 +98,8 @@ export default function App() {
     setSection(sec)
     setFocusRef(ref ? { section: sec, refId: ref, t: Date.now() } : null)
   }
+
+  if (!session) return <Login onLogin={login} theme={theme} setTheme={setTheme} />
 
   return (
     <div className="app">
@@ -98,16 +128,16 @@ export default function App() {
                 : k === 'comms' && unreadOrders ? { n: unreadOrders, amber: true } : null} />
           ))}
         </nav>
-        <div style={{ padding: '10px 12px', borderTop: '1px solid var(--line-soft)' }}>
-          <div className="nav-label" style={{ padding: '0 0 6px' }}>{t('side.viewingAs')}</div>
-          <select
-            style={{ width: '100%', padding: '7px 8px', border: '1px solid var(--line)', borderRadius: 7, font: 'inherit' }}
-            value={user.id}
-            onChange={(e) => dispatch({ type: 'SET_USER', userId: e.target.value })}
-          >
-            {PEOPLE.map((p) => <option key={p.id} value={p.id}>{L(p.name)} — {t(p.titleKey)}</option>)}
-          </select>
-          <div className="muted small" style={{ marginTop: 8 }}>{t('side.roleNote')}</div>
+        <div style={{ padding: '12px', borderTop: '1px solid var(--line-soft)' }}>
+          <div className="nav-label" style={{ padding: '0 0 6px' }}>{t('side.signedIn')}</div>
+          <div className="row" style={{ flexWrap: 'nowrap' }}>
+            <span className="avatar">{initials(L(user.name))}</span>
+            <span style={{ minWidth: 0, flex: 1 }}>
+              <div style={{ fontWeight: 650, fontSize: 13 }}>{L(user.name)}</div>
+              <div className="muted small">{t(user.titleKey)}</div>
+            </span>
+            <button className="btn sm" onClick={logout} title={t('side.logout')}>⎋ {t('side.logout')}</button>
+          </div>
         </div>
       </aside>
 
@@ -121,6 +151,10 @@ export default function App() {
             <button className={lang === 'fa' ? 'on' : ''} onClick={() => setLang('fa')}>فارسی</button>
             <button className={lang === 'en' ? 'on' : ''} onClick={() => setLang('en')}>EN</button>
           </div>
+          <button className="btn sm" onClick={() => setTheme(theme === 'dark' ? 'light' : 'dark')}
+            title={theme === 'dark' ? t('theme.toLight') : t('theme.toDark')} aria-label="theme">
+            {theme === 'dark' ? '☀' : '🌙'}
+          </button>
           <DemoMenu dispatch={dispatch} t={t} />
           <Clock />
         </div>
@@ -154,7 +188,7 @@ function DemoMenu({ dispatch, t }) {
       <button className="btn sm" onClick={() => setOpen(!open)}>{t('top.simulate')}</button>
       {open && (
         <div style={{
-          position: 'absolute', insetInlineEnd: 0, top: '110%', zIndex: 50, background: '#fff',
+          position: 'absolute', insetInlineEnd: 0, top: '110%', zIndex: 50, background: 'var(--surface)',
           border: '1px solid var(--line)', borderRadius: 8, boxShadow: 'var(--shadow)', minWidth: 220, padding: 6,
         }}>
           <button className="nav-item" onClick={() => fire('line-stop')}>{t('sim.lineStop')}</button>

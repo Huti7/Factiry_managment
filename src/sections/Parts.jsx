@@ -59,7 +59,7 @@ export default function Parts({ focusRef }) {
           {reqs.map((r) => (
             <div key={r.id} style={{
               border: '1px solid var(--line)', borderRadius: 8, padding: '12px 14px',
-              background: focusRef?.refId === r.id ? 'var(--green-25)' : '#fff',
+              background: focusRef?.refId === r.id ? 'var(--green-25)' : 'var(--surface)',
               borderInlineStart: r.urgency === 'urgent' && r.status === 'pending' ? '4px solid var(--crit)' : '4px solid var(--green-100)',
             }}>
               <div className="row" style={{ justifyContent: 'space-between' }}>

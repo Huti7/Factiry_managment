@@ -61,10 +61,10 @@ export function Sparkline({ points, refValue, min, max, height = 46, width = 220
     <div dir="ltr">
       <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height }} role="img" aria-label={label || `trend, latest ${fmt(last.v)}${unit}`}>
         {refValue != null && refValue >= lo && refValue <= hi && (
-          <line x1="2" x2={width - 2} y1={y(refValue)} y2={y(refValue)} stroke="#b9c4bd" strokeWidth="1" strokeDasharray="4 3" />
+          <line x1="2" x2={width - 2} y1={y(refValue)} y2={y(refValue)} stroke="var(--ink-3)" strokeWidth="1" strokeDasharray="4 3" />
         )}
-        <path d={d} fill="none" stroke="#0e7a3d" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
-        <circle cx={x(points.length - 1)} cy={y(last.v)} r="3.5" fill="#0e7a3d" stroke="#fff" strokeWidth="1.5" />
+        <path d={d} fill="none" stroke="var(--green-600)" strokeWidth="2" strokeLinejoin="round" strokeLinecap="round" />
+        <circle cx={x(points.length - 1)} cy={y(last.v)} r="3.5" fill="var(--green-600)" stroke="var(--surface)" strokeWidth="1.5" />
       </svg>
     </div>
   )
