@@ -18,6 +18,7 @@ import Parts from './sections/Parts.jsx'
 import Traceability from './sections/Traceability.jsx'
 import Comms from './sections/Comms.jsx'
 import Reports from './sections/Reports.jsx'
+import Summary from './sections/Summary.jsx'
 
 const SECTIONS = {
   overview: { ico: '▦', comp: Overview },
@@ -33,6 +34,7 @@ const SECTIONS = {
   traceability: { ico: '⛓', comp: Traceability },
   comms: { ico: '✉', comp: Comms },
   reports: { ico: '⬓', comp: Reports },
+  summary: { ico: '≣', comp: Summary },
 }
 
 function Clock() {
@@ -118,7 +120,7 @@ export default function App() {
               badge={k === 'production' && awaitingReason ? { n: awaitingReason, amber: true } : null} />
           ))}
           <div className="nav-label">{t('nav.group.people')}</div>
-          {nav.filter((k) => ['attendance', 'orders', 'accounting', 'reports'].includes(k)).map((k) => (
+          {nav.filter((k) => ['attendance', 'orders', 'accounting', 'reports', 'summary'].includes(k)).map((k) => (
             <NavItem key={k} k={k} active={active} onClick={goto} />
           ))}
           <div className="nav-label">{t('nav.group.approvals')}</div>

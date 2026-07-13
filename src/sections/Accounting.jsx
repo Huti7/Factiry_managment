@@ -3,7 +3,8 @@ import { useStore, useUser, can, PEOPLE } from '../store.jsx'
 import { useLang } from '../i18n.jsx'
 import { Card, Modal, Field, SectionHead, Pill, Tile, Seg, Empty } from '../components/ui.jsx'
 import { receivables } from '../derive.js'
-import { fmt, money, dateShort, monthKey } from '../utils.js'
+import { fmt, money, dateShort, monthKey, dayKey } from '../utils.js'
+import * as XLSX from 'xlsx'
 
 const KIND_TONE = { sale: 'green', payment: 'green', purchase: 'gray', expense: 'gray' }
 
@@ -13,6 +14,7 @@ export default function Accounting() {
   const { t, L } = useLang()
   const [view, setView] = useState('ledger')
   const [adding, setAdding] = useState(false)
+  const [importing, setImporting] = useState(false)
   const [editing, setEditing] = useState(null)
   const [paying, setPaying] = useState(null)
 
@@ -29,6 +31,7 @@ export default function Accounting() {
     <div className="stack">
       <SectionHead title={t('nav.accounting')} sub={t('ac.sub')}>
         <Seg value={view} onChange={setView} options={[{ value: 'ledger', label: t('ac.ledger') }, { value: 'receivables', label: t('ac.recvTab', { n: fmt(recv.length, 0) }) }]} />
+        {can(user, 'add-acct') && <button className="btn" onClick={() => setImporting(true)}>{t('ac.importBtn')}</button>}
         {can(user, 'add-acct') && <button className="btn primary" onClick={() => setAdding(true)}>{t('ac.manual')}</button>}
       </SectionHead>
 
@@ -100,6 +103,7 @@ export default function Accounting() {
       )}
 
       {adding && <EntryModal onClose={() => setAdding(false)} />}
+      {importing && <ImportModal onClose={() => setImporting(false)} />}
       {editing && <EditModal entry={editing} onClose={() => setEditing(null)} />}
       {paying && <PayModal inv={paying} onClose={() => setPaying(null)} />}
     </div>
@@ -172,6 +176,133 @@ function PayModal({ inv, onClose }) {
         }}>{t('ac.savePay')}</button>
       </>}>
       <Field label={t('ac.received')}><input type="number" max={inv.balance} value={amount} onChange={(e) => setAmount(e.target.value)} /></Field>
+    </Modal>
+  )
+}
+
+// ── Excel / CSV import ───────────────────────────────────────────────────────
+const KIND_WORDS = {
+  sale: ['sale', 'فروش'],
+  payment: ['payment', 'دریافت', 'دریافتی', 'وصول'],
+  purchase: ['purchase', 'خرید'],
+  expense: ['expense', 'هزینه'],
+}
+const HEADER_WORDS = ['date', 'تاریخ', 'type', 'نوع', 'desc', 'شرح', 'توضیح', 'amount', 'مبلغ']
+
+const latinDigits = (v) => String(v ?? '').replace(/[۰-۹]/g, (d) => '۰۱۲۳۴۵۶۷۸۹'.indexOf(d)).replace(/[٠-٩]/g, (d) => '٠١٢٣٤٥٦٧٨٩'.indexOf(d))
+const toAmount = (v) => Number(latinDigits(v).replace(/[,٬\s]/g, '')) || 0
+const toKind = (v, amount) => {
+  const x = String(v ?? '').toLowerCase()
+  for (const [k, words] of Object.entries(KIND_WORDS)) if (words.some((w) => x.includes(w))) return k
+  return amount >= 0 ? 'sale' : 'expense'
+}
+const toTs = (v) => {
+  if (v instanceof Date && !isNaN(v)) return v.getTime()
+  if (typeof v === 'number' && v > 20000 && v < 80000) return (v - 25569) * 86400e3 // Excel serial
+  const p = Date.parse(latinDigits(v))
+  return Number.isNaN(p) ? Date.now() : p
+}
+
+function parseRows(rows) {
+  if (!rows.length) return []
+  let start = 0
+  let cols = { date: 0, type: 1, desc: 2, amount: 3 }
+  const head = rows[0].map((c) => String(c ?? '').toLowerCase())
+  if (head.some((c) => HEADER_WORDS.some((w) => c.includes(w)))) {
+    start = 1
+    const find = (words, dflt) => {
+      const i = head.findIndex((c) => words.some((w) => c.includes(w)))
+      return i >= 0 ? i : dflt
+    }
+    cols = {
+      date: find(['date', 'تاریخ'], 0),
+      type: find(['type', 'نوع'], 1),
+      desc: find(['desc', 'شرح', 'توضیح'], 2),
+      amount: find(['amount', 'مبلغ'], 3),
+    }
+  }
+  const out = []
+  for (const r of rows.slice(start)) {
+    if (!r || r.every((c) => c == null || c === '')) continue
+    const rawAmount = toAmount(r[cols.amount])
+    if (!rawAmount) continue
+    const kind = toKind(r[cols.type], rawAmount)
+    const signed = kind === 'sale' || kind === 'payment' ? Math.abs(rawAmount) : -Math.abs(rawAmount)
+    out.push({ at: toTs(r[cols.date]), kind, desc: String(r[cols.desc] ?? '').trim() || '—', amount: signed })
+  }
+  return out
+}
+
+function ImportModal({ onClose }) {
+  const { dispatch } = useStore()
+  const user = useUser()
+  const { t } = useLang()
+  const [rows, setRows] = useState(null)
+  const [bad, setBad] = useState(false)
+
+  const onFile = async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    setBad(false)
+    try {
+      const buf = await file.arrayBuffer()
+      const wb = XLSX.read(buf, { cellDates: true })
+      const sheet = wb.Sheets[wb.SheetNames[0]]
+      const parsed = parseRows(XLSX.utils.sheet_to_json(sheet, { header: 1 }))
+      if (!parsed.length) { setBad(true); setRows(null); return }
+      setRows(parsed)
+    } catch {
+      setBad(true)
+      setRows(null)
+    }
+  }
+
+  const downloadSample = () => {
+    const ws = XLSX.utils.aoa_to_sheet([
+      ['تاریخ', 'نوع', 'شرح', 'مبلغ'],
+      [dayKey(Date.now()), 'فروش', 'فاکتور فروش آرد — نمونه', 25000],
+      [dayKey(Date.now() - 86400e3), 'خرید', 'خرید گندم — نمونه', 18000],
+      [dayKey(Date.now() - 2 * 86400e3), 'هزینه', 'قبض برق — نمونه', 2100],
+    ])
+    const wb = XLSX.utils.book_new()
+    XLSX.utils.book_append_sheet(wb, ws, 'ledger')
+    XLSX.writeFile(wb, 'sample-ledger.xlsx')
+  }
+
+  return (
+    <Modal title={t('ac.importTitle')} sub={t('ac.importSub')} onClose={onClose}
+      actions={<>
+        <button className="btn" onClick={downloadSample}>{t('ac.sample')}</button>
+        <button className="btn" onClick={onClose}>{t('common.cancel')}</button>
+        <button className="btn primary" disabled={!rows?.length} onClick={() => {
+          dispatch({ type: 'IMPORT_ACCT_ENTRIES', rows, by: user.id })
+          onClose()
+        }}>{t('ac.doImport', { n: fmt(rows?.length || 0, 0) })}</button>
+      </>}>
+      <Field label={t('ac.chooseFile')}>
+        <input type="file" accept=".xlsx,.xls,.csv" onChange={onFile} />
+      </Field>
+      {bad && <div className="notice warn">{t('ac.badFile')}</div>}
+      {rows && (
+        <>
+          <div className="notice" style={{ marginBottom: 8 }}>{t('ac.previewN', { n: fmt(rows.length, 0) })}</div>
+          <div className="tbl-wrap" style={{ maxHeight: 220, overflowY: 'auto' }}>
+            <table className="tbl">
+              <thead><tr><th>{t('ac.date')}</th><th>{t('ac.type')}</th><th>{t('ac.desc')}</th><th className="num">{t('ac.amount')}</th></tr></thead>
+              <tbody>
+                {rows.slice(0, 8).map((r, i) => (
+                  <tr key={i}>
+                    <td>{dateShort(r.at)}</td>
+                    <td><Pill tone={KIND_TONE[r.kind]}>{t(`kind.${r.kind}`)}</Pill></td>
+                    <td>{r.desc}</td>
+                    <td className="num">{money(r.amount)}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </>
+      )}
     </Modal>
   )
 }

@@ -8,22 +8,22 @@ const LS_KEY = 'flourmill-state-v3'
 // ── permissions ─────────────────────────────────────────────────────────────
 const ROLE_CAPS = {
   owner: ['ack-alerts', 'approve-parts', 'grant-links', 'send-order', 'export-reports', 'add-order', 'record-payment', 'view-all'],
-  foreman: ['silo-override', 'add-intake', 'correct-attendance', 'create-part-request', 'stop-reason', 'add-dispatch', 'raise-flag'],
+  foreman: ['silo-override', 'add-intake', 'create-part-request', 'stop-reason', 'add-dispatch', 'raise-flag'],
   lab: ['add-lab', 'raise-flag'],
   accountant: ['add-acct', 'edit-acct', 'record-payment', 'add-order', 'add-dispatch', 'export-reports', 'raise-flag'],
   sales: ['add-order', 'add-dispatch', 'raise-flag'],
   purchasing: ['mark-purchased', 'raise-flag'],
-  scale: ['add-intake', 'raise-flag'],
+  scale: ['add-intake', 'correct-attendance', 'raise-flag'],
 }
 
 export const NAV_BY_ROLE = {
-  owner: ['overview', 'twin', 'production', 'silos', 'intake', 'lab', 'attendance', 'orders', 'accounting', 'parts', 'traceability', 'comms', 'reports'],
-  foreman: ['overview', 'twin', 'production', 'silos', 'intake', 'attendance', 'parts', 'traceability', 'comms'],
+  owner: ['overview', 'twin', 'production', 'silos', 'intake', 'lab', 'attendance', 'orders', 'accounting', 'parts', 'traceability', 'comms', 'reports', 'summary'],
+  foreman: ['overview', 'twin', 'production', 'silos', 'intake', 'parts', 'traceability', 'comms'],
   lab: ['overview', 'production', 'lab', 'traceability', 'comms'],
   accountant: ['overview', 'orders', 'accounting', 'comms', 'reports'],
   sales: ['overview', 'orders', 'traceability', 'comms'],
   purchasing: ['overview', 'parts', 'comms'],
-  scale: ['overview', 'intake', 'comms'],
+  scale: ['overview', 'intake', 'attendance', 'comms'],
 }
 
 export function can(user, cap) {
@@ -176,6 +176,14 @@ function reducer(state, action) {
       })
 
     // ── accounting ──────────────────────────────────────────────────────
+    case 'IMPORT_ACCT_ENTRIES':
+      return withDraft(state, (d) => {
+        for (const r of action.rows) {
+          d.acctEntries.unshift({ id: uid('ac'), at: r.at, kind: r.kind, desc: r.desc, amount: Number(r.amount), source: 'imported', by: 'import', edits: [] })
+        }
+        d.acctEntries.sort((a, b) => b.at - a.at)
+      })
+
     case 'ADD_ACCT_ENTRY':
       return withDraft(state, (d) => {
         d.acctEntries.unshift({ id: uid('ac'), at: now, kind: action.kind, desc: action.desc, amount: Number(action.amount), source: 'manual', by: action.by, edits: [] })
