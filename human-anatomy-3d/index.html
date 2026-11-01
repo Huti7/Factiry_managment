@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Anatomica 3D</title>
+  <meta name="description" content="Interactive 3D human anatomy: bones, muscles and nervous system for male and female bodies." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,500;9..144,700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'><circle cx='32' cy='32' r='30' fill='%23c9a978'/><text x='32' y='43' font-size='32' text-anchor='middle' fill='%233b2f22' font-family='Georgia'>A</text></svg>" />
+  <script type="importmap">{ "imports": { "three": "./lib/three.module.js" } }</script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand">
+      <svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="7" r="4.5"/><path d="M16 12v10M9 14l7 3 7-3M12 30l4-8 4 8"/></svg>
+      <div>
+        <h1>Anatomica <span>3D</span></h1>
+        <p>Interactive human anatomy</p>
+      </div>
+    </div>
+    <nav class="tabs" role="tablist">
+      <button class="tab active" data-view="explorer" role="tab">3D Body Explorer</button>
+      <button class="tab" data-view="atlas" role="tab">Parts Atlas</button>
+    </nav>
+    <div class="sex-toggle" role="group" aria-label="Body type">
+      <button class="sex-btn active" data-sex="male"><span class="sym">♂</span> Male</button>
+      <button class="sex-btn" data-sex="female"><span class="sym">♀</span> Female</button>
+    </div>
+  </header>
+
+  <!-- ========== 3D EXPLORER ========== -->
+  <main id="explorer" class="view active">
+    <div id="viewport"></div>
+    <div id="tooltip" class="tooltip"></div>
+
+    <aside id="infoPanel" class="slide slide-left" aria-hidden="true">
+      <button class="close" data-close="infoPanel" aria-label="Close">×</button>
+      <div class="slide-body" id="infoBody"></div>
+    </aside>
+
+    <section class="layer-panel" id="layerPanel">
+      <h2>Body systems</h2>
+      <button id="panelMore" class="more-btn" aria-expanded="false">More ▾</button>
+      <div id="layerList"></div>
+      <div class="search">
+        <input id="search" type="search" placeholder="Search a bone, muscle or nerve…" autocomplete="off" />
+        <ul id="searchResults"></ul>
+      </div>
+      <div class="row-btns">
+        <button id="btnShowAll" class="ghost">Show everything</button>
+        <button id="btnXray" class="ghost">X-ray mode</button>
+      </div>
+      <p class="hint">Drag to rotate · Scroll to zoom · Right-drag to pan · Click any part to learn about it</p>
+    </section>
+
+    <div class="toolbar">
+      <button data-cam="front">Front</button>
+      <button data-cam="back">Back</button>
+      <button data-cam="left">Left</button>
+      <button data-cam="right">Right</button>
+      <span class="sep"></span>
+      <button data-cam="reset" title="Reset view">⟲ Reset</button>
+      <button id="btnRotate" title="Auto-rotate">↻ Spin</button>
+    </div>
+  </main>
+
+  <!-- ========== PARTS ATLAS ========== -->
+  <main id="atlas" class="view">
+    <div class="atlas-head">
+      <div class="cat-tabs" id="catTabs"></div>
+      <div class="atlas-tools">
+        <div class="chips" id="regionChips"></div>
+        <input id="atlasSearch" type="search" placeholder="Filter parts…" autocomplete="off" />
+      </div>
+      <p class="atlas-sub" id="atlasSub"></p>
+    </div>
+    <div class="grid" id="grid"></div>
+
+    <div class="backdrop" id="backdrop"></div>
+    <aside id="contextPanel" class="slide slide-right" aria-hidden="true">
+      <button class="close" data-close="contextPanel" aria-label="Close">×</button>
+      <div class="ctx-head" id="ctxHead"></div>
+      <div class="ctx-stage">
+        <div id="ctxViewport"></div>
+        <div class="ctx-tools">
+          <button id="ctxZoom">Zoom to part</button>
+          <button id="ctxFull" class="active">Full body</button>
+        </div>
+        <div class="ctx-legend" id="ctxLegend"></div>
+      </div>
+      <div class="slide-body" id="ctxBody"></div>
+    </aside>
+  </main>
+
+  <div id="loading" class="loading"><div class="spinner"></div><p>Building the human body…</p></div>
+
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
