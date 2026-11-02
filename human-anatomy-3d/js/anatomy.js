@@ -7,7 +7,7 @@ import { V, lerp, smooth, tube, sheet, ell, box, merge, warpGeometry, rodProf } 
 import { femaleWarp } from './warp.js';
 import {
   sphere, ellipsoid as E, capsule as C, chain, curveTube, torusSDF, U, SUB, bounds, polygonize, mirrorX,
-  hit, plate, place, rcyl,
+  hit, plate, place, rcyl, rbox,
 } from './sdf.js';
 
 const SIDES = [1, -1];
@@ -133,6 +133,7 @@ function buildMale() {
       E(V(0, 1.585, 0.056), V(0.035, 0.034, 0.036)),
       chain(Array.from({ length: 11 }, (_, i) => { const a = -1.45 + (i * 2.9) / 10; return V(0.029 * Math.sin(a), 1.557, 0.044 + 0.037 * Math.cos(a)); }), Array(11).fill(0.0062)),
       ...SIDES.map((s) => E(S(s, 0.05, 1.61, 0.058), V(0.013, 0.014, 0.011), new THREE.Euler(0, s * 0.5, 0))),
+      ...SIDES.map((s) => chain([S(s, 0.036, 1.614, 0.078), S(s, 0.052, 1.609, 0.066), S(s, 0.062, 1.606, 0.042)], [0.0055, 0.0068, 0.005])), // cheekbone ridge
       chain([V(-0.045, 1.649, 0.08), V(0, 1.653, 0.091), V(0.045, 1.649, 0.08)], [0.006, 0.0075, 0.006]),
       C(V(0, 1.636, 0.088), V(0, 1.612, 0.1), 0.004, 0.003),
       ...SIDES.map((s) => C(S(s, 0.055, 1.6, -0.026), S(s, 0.056, 1.576, -0.022), 0.008, 0.004)),
@@ -140,7 +141,7 @@ function buildMale() {
     );
     let f = U(0.012, vault, face);
     for (const s of SIDES) f = SUB(f, E(S(s, 0.1, 1.638, 0.005), V(0.035, 0.04, 0.05)), 0.012); // temporal fossa
-    for (const s of SIDES) f = SUB(f, E(S(s, 0.031, 1.633, 0.088), V(0.0175, 0.0165, 0.032)), 0.004); // orbits
+    for (const s of SIDES) f = SUB(f, rbox(S(s, 0.031, 1.633, 0.092), V(0.0185, 0.0168, 0.032), 0.0085, new THREE.Euler(0, s * 0.25, -s * 0.12)), 0.004); // orbits (rounded-square)
     f = SUB(f, E(V(0, 1.598, 0.097), V(0.0095, 0.016, 0.022)), 0.003); // nasal aperture
     for (const s of SIDES) f = U(0.004, f, chain([S(s, 0.056, 1.607, 0.05), S(s, 0.066, 1.604, 0.02), S(s, 0.065, 1.604, -0.004), S(s, 0.058, 1.606, -0.022)], [0.005, 0.0042, 0.0042, 0.005])); // zygomatic arch
     skullF = f;
@@ -150,7 +151,7 @@ function buildMale() {
       g.push(box(V(0.027 * Math.sin(a), 1.543, 0.046 + 0.038 * Math.cos(a)), V(0.0058, 0.011, 0.0052), new THREE.Euler(0, a, 0)));
     }
     add('bones', 'skull', null, merge(g), 'Skull (cranium)');
-    const dark = SIDES.map((s) => ell(S(s, 0.031, 1.632, 0.064), V(0.012, 0.012, 0.01)));
+    const dark = SIDES.map((s) => ell(S(s, 0.031, 1.633, 0.068), V(0.0155, 0.0138, 0.006)));
     dark.push(ell(V(0, 1.597, 0.084), V(0.006, 0.011, 0.008)));
     add('bones', 'skull', null, merge(dark), 'Skull (cranium)', { color: 0x3b2a1e });
   }
@@ -397,7 +398,7 @@ function buildMale() {
         phF.push(last ? U(0.002, C(p, q.clone().addScaledVector(dir, -0.003), rr * 0.75, rr * 0.55), sphere(p.clone().addScaledVector(dir, 0.003), rr), E(q.clone().addScaledVector(dir, -0.003), V(rr * 0.85, rr * 0.6, rr * 0.6)))
           : longBone(p, q, rr, rr * 0.68, rr * 0.82));
         p = q.clone().add(dir.clone().multiplyScalar(0.002));
-        dir = dir.lerp(V(0, -0.6, 0.4), 0.12).normalize();
+        dir = dir.lerp(V(0, -0.4, 0.92), fI === 0 ? 0.15 : 0.42).normalize();
       });
     }
     addPair('bones', 'metacarpals', solid(U(0, mcF), [V(0.225, 0.75, -0.03), V(0.3, 0.845, 0.025)], 0.0006, 0.004), 'Metacarpals');
@@ -582,7 +583,7 @@ function buildMale() {
     const slips = [];
     for (let i = 0; i < 8; i++) {
       const y = 1.355 - i * 0.03;
-      slips.push(fasc([TP(y - 0.015, 58 - i, 0.003), TP(y - 0.005, 85, 0.007), TP(y + 0.01, 120, 0.007), V(0.065 + i * 0.003, 1.395 - i * 0.019, -0.098)], 0.0062, { tendon: 0.35, peak: 0.35 }));
+      slips.push(fasc([TP(y - 0.015, 58 - i, 0.003), TP(y - 0.005, 85, 0.008), TP(y + 0.01, 120, 0.008), V(0.065 + i * 0.003, 1.395 - i * 0.019, -0.098)], 0.0078, { tendon: 0.35, peak: 0.35 }));
     }
     mp('serratusAnterior', slips, 'Serratus anterior', 0.0016);
   }
@@ -594,13 +595,17 @@ function buildMale() {
   }
   {
     const slips = [];
-    for (let i = 0; i < 9; i++) {
-      const y = 1.27 - i * 0.033;
-      const o = TP(y, 52 + i * 5.5, 0.008);
-      const e = i < 7 ? V(0.072 - i * 0.002, y - 0.1, chestZ(0.072, y - 0.1, 0.006)) : TP(1.0 - (i - 7) * 0.01, 75 + (i - 7) * 12, 0.012);
-      slips.push(fasc([o, o.clone().lerp(e, 0.5).add(V(0.008, 0, 0.004)), e], 0.0072, { tendon: 0.4, pw: 0.5 }));
+    for (let i = 0; i < 13; i++) {
+      const y = 1.27 - i * 0.0228;
+      const o = TP(y, 52 + i * 3.8, 0.008);
+      const e = i < 10 ? V(0.072 - i * 0.0015, y - 0.1, chestZ(0.072, y - 0.1, 0.006)) : TP(1.0 - (i - 10) * 0.008, 75 + (i - 10) * 10, 0.012);
+      slips.push(fasc([o, o.clone().lerp(e, 0.5).add(V(0.008, 0, 0.004)), e], 0.0095, { tendon: 0.4, pw: 0.45 }));
     }
     mp('externalOblique', slips, 'External oblique', 0.0018);
+    mp('internalOblique', fan([
+      [TP(1.005, 108, 0.004), TP(0.99, 85, 0.006), TP(0.975, 60, 0.006), V(0.07, 0.94, 0.084)],
+      [TP(1.16, 105, 0.002), TP(1.13, 85, 0.002), TP(1.1, 62, 0.002), V(0.068, 1.06, 0.09)],
+    ], 8, 0.0065, { tendon: 0.55, pw: 0.4 }), 'Internal oblique', 0.0018);
   }
   {
     const orig = [TP(1.29, 179, 0.009), TP(1.2, 179, 0.009), TP(1.11, 179, 0.011), TP(1.02, 176, 0.012), TP(1.0, 150, 0.013), TP(1.015, 120, 0.013)];
@@ -647,15 +652,15 @@ function buildMale() {
     const med = V(0.192, 1.112, -0.036);
     mp('forearmFlexors', [
       fasc([med, lp('F', 0.2, -10, 0.022), lp('F', 0.45, 60, 0.014), lp('F', 0.5, 75, 0.011)], 0.0075, { peak: 0.35 }), // pronator teres
-      fasc([med, lp('F', 0.25, -25, 0.024), lp('F', 0.6, -5, 0.017), V(0.264, 0.86, -0.004)], 0.0075, { peak: 0.3, tendon: 0.2 }), // flexor carpi radialis
+      fasc([med, lp('F', 0.25, -25, 0.024), lp('F', 0.6, -5, 0.017), V(0.264, 0.86, -0.004)], 0.0088, { peak: 0.3, tendon: 0.2 }), // flexor carpi radialis
       fasc([med, lp('F', 0.25, -45, 0.024), lp('F', 0.6, -20, 0.017), V(0.256, 0.856, -0.002)], 0.006, { peak: 0.3, tendon: 0.2 }), // palmaris longus
-      fasc([med, lp('F', 0.3, -60, 0.02), lp('F', 0.65, -40, 0.016), V(0.256, 0.852, -0.008)], 0.0085, { peak: 0.4, tendon: 0.25 }), // flexor digitorum superficialis
-      fasc([med, lp('F', 0.25, -95, 0.022), lp('F', 0.6, -95, 0.017), V(0.244, 0.852, -0.01)], 0.0075, { peak: 0.35, tendon: 0.2 }), // flexor carpi ulnaris
+      fasc([med, lp('F', 0.3, -60, 0.02), lp('F', 0.65, -40, 0.016), V(0.256, 0.852, -0.008)], 0.0098, { peak: 0.4, tendon: 0.25 }), // flexor digitorum superficialis
+      fasc([med, lp('F', 0.25, -95, 0.022), lp('F', 0.6, -95, 0.017), V(0.244, 0.852, -0.01)], 0.009, { peak: 0.35, tendon: 0.2 }), // flexor carpi ulnaris
     ], 'Forearm flexor group', 0.0013);
     const lat = V(0.238, 1.113, -0.033);
     const fs = [
-      fasc([lp('U', 0.82, 105, 0.017), lp('F', 0.2, 95, 0.024), lp('F', 0.55, 110, 0.017), V(0.27, 0.86, -0.028)], 0.0075, { peak: 0.3, tendon: 0.2 }), // ECRL/B
-      fasc([lat, lp('F', 0.25, 140, 0.022), lp('F', 0.6, 160, 0.016), V(0.257, 0.862, -0.034)], 0.0078, { peak: 0.35, tendon: 0.2 }), // extensor digitorum
+      fasc([lp('U', 0.82, 105, 0.017), lp('F', 0.2, 95, 0.024), lp('F', 0.55, 110, 0.017), V(0.27, 0.86, -0.028)], 0.0088, { peak: 0.3, tendon: 0.2 }), // ECRL/B
+      fasc([lat, lp('F', 0.25, 140, 0.022), lp('F', 0.6, 160, 0.016), V(0.257, 0.862, -0.034)], 0.009, { peak: 0.35, tendon: 0.2 }), // extensor digitorum
       fasc([lat, lp('F', 0.25, 175, 0.02), lp('F', 0.6, -165, 0.015), V(0.242, 0.86, -0.032)], 0.0065, { peak: 0.35, tendon: 0.2 }), // ECU
       fasc([lp('F', 0.45, 160, 0.014), lp('F', 0.7, 120, 0.016), lp('F', 0.92, 100, 0.013), V(0.284, 0.84, -0.012)], 0.0045, { tendon: 0.4 }), // APL
     ];
@@ -710,18 +715,18 @@ function buildMale() {
 
   // ---- leg & foot ----
   mp('gastrocnemius', [
-    fasc([V(0.074, 0.528, -0.03), lp('L', 0.12, -150, 0.04), lp('L', 0.28, -160, 0.048), lp('L', 0.5, -175, 0.032), lp('L', 0.6, 180, 0.022)], 0.012, { peak: 0.38, tendon: 0.2 }),
-    fasc([V(0.08, 0.52, -0.036), lp('L', 0.15, -125, 0.04), lp('L', 0.3, -135, 0.045), lp('L', 0.48, -160, 0.03)], 0.009, { peak: 0.38, tendon: 0.25 }),
-    fasc([V(0.11, 0.528, -0.03), lp('L', 0.12, 150, 0.04), lp('L', 0.27, 160, 0.044), lp('L', 0.48, 175, 0.03), lp('L', 0.6, 180, 0.022)], 0.0105, { peak: 0.38, tendon: 0.2 }),
+    fasc([V(0.074, 0.528, -0.03), lp('L', 0.12, -150, 0.04), lp('L', 0.28, -160, 0.048), lp('L', 0.5, -175, 0.034), lp('L', 0.6, 180, 0.022)], 0.0145, { peak: 0.38, tendon: 0.2 }),
+    fasc([V(0.08, 0.52, -0.036), lp('L', 0.15, -125, 0.04), lp('L', 0.3, -135, 0.047), lp('L', 0.48, -160, 0.032)], 0.0115, { peak: 0.38, tendon: 0.25 }),
+    fasc([V(0.11, 0.528, -0.03), lp('L', 0.12, 150, 0.04), lp('L', 0.27, 160, 0.044), lp('L', 0.48, 175, 0.032), lp('L', 0.6, 180, 0.022)], 0.013, { peak: 0.38, tendon: 0.2 }),
   ], 'Gastrocnemius', 0.0017);
   mp('soleus', [
-    fasc([lp('L', 0.05, 150, 0.025), lp('L', 0.35, 140, 0.036), lp('L', 0.6, 160, 0.03), lp('L', 0.82, 180, 0.02)], 0.009, { peak: 0.45 }),
+    fasc([lp('L', 0.05, 150, 0.025), lp('L', 0.35, 140, 0.036), lp('L', 0.6, 160, 0.03), lp('L', 0.82, 180, 0.02)], 0.011, { peak: 0.45 }),
     fasc([lp('L', 0.1, 180, 0.02), lp('L', 0.42, 180, 0.03), lp('L', 0.65, 180, 0.026), lp('L', 0.85, 180, 0.018)], 0.0095, { peak: 0.45 }),
-    fasc([lp('L', 0.15, -150, 0.022), lp('L', 0.42, -135, 0.034), lp('L', 0.62, -150, 0.03), lp('L', 0.82, -175, 0.02)], 0.009, { peak: 0.45 }),
+    fasc([lp('L', 0.15, -150, 0.022), lp('L', 0.42, -135, 0.034), lp('L', 0.62, -150, 0.03), lp('L', 0.82, -175, 0.02)], 0.011, { peak: 0.45 }),
   ], 'Soleus', 0.0017);
   mp('achilles', [-6, 6].map((o) => fasc([lp('L', 0.55, 180 + o, 0.026), lp('L', 0.8, 180, 0.019), lp('L', 0.95, 180, 0.02), V(0.098 + o * 0.0003, 0.042, -0.072)], 0.0042, { tendon: 0.85 })), 'Achilles (calcaneal) tendon', 0.0011, tendonCol);
   mp('tibialisAnterior', [
-    fasc([lp('L', 0.06, 50, 0.03), lp('L', 0.3, 42, 0.034), lp('L', 0.6, 30, 0.027), lp('L', 0.88, 12, 0.02), V(0.082, 0.075, 0.036), V(0.068, 0.052, 0.069)], 0.0095, { peak: 0.3, tendon: 0.2, n: 18 }),
+    fasc([lp('L', 0.06, 50, 0.03), lp('L', 0.3, 42, 0.034), lp('L', 0.6, 30, 0.027), lp('L', 0.88, 12, 0.02), V(0.082, 0.075, 0.036), V(0.068, 0.052, 0.069)], 0.011, { peak: 0.3, tendon: 0.2, n: 18 }),
     fasc([lp('L', 0.1, 62, 0.03), lp('L', 0.35, 55, 0.032), lp('L', 0.6, 35, 0.026)], 0.007, { peak: 0.4 }),
   ], 'Tibialis anterior', 0.0014);
   {
@@ -730,7 +735,7 @@ function buildMale() {
     mp('extensorDigitorumLongus', fs, 'Extensor digitorum longus', 0.0011);
   }
   mp('fibularisLongus', [
-    fasc([lp('L', 0.04, 105, 0.026), lp('L', 0.35, 108, 0.028), lp('L', 0.7, 115, 0.02), V(0.13, 0.06, -0.022), V(0.122, 0.028, 0.025)], 0.0085, { peak: 0.3, tendon: 0.2, n: 16 }),
+    fasc([lp('L', 0.04, 105, 0.026), lp('L', 0.35, 108, 0.028), lp('L', 0.7, 115, 0.02), V(0.13, 0.06, -0.022), V(0.122, 0.028, 0.025)], 0.0098, { peak: 0.3, tendon: 0.2, n: 16 }),
     fasc([lp('L', 0.4, 120, 0.022), lp('L', 0.65, 125, 0.024), lp('L', 0.88, 130, 0.017), V(0.131, 0.055, -0.018), V(0.13, 0.03, 0.035)], 0.007, { peak: 0.4, tendon: 0.25 }),
   ], 'Fibularis (peroneus) longus & brevis', 0.0014);
   mp('footMuscles', [
@@ -828,5 +833,42 @@ function buildMale() {
     add('nerves', 'commonFibular', side, nerve([split, LP(L_, s, 0.04, 140, 0.03), LP(L_, s, 0.14, 95, 0.026), LP(L_, s, 0.55, 60, 0.021), LP(L_, s, 0.92, 30, 0.016), S(s, 0.1, 0.05, 0.07), S(s, 0.085, 0.025, 0.13)], 0.0024, { r2: 0.001, seg: 70 }), 'Common fibular (peroneal) nerve');
   }
 
+  // forearm + hand rotated inward about the elbow (reference pose: forearms hang straight beside the thighs)
+  const theta = 0.13;
+  const armPose = (p) => {
+    const ax = Math.abs(p.x), sg = Math.sign(p.x) || 1;
+    const w = smooth(0.165, 0.185, ax) * smooth(1.13, 1.06, p.y);
+    if (w <= 0) return;
+    const th = theta * w, c = Math.cos(th), sn = Math.sin(th);
+    const dx = ax - 0.222, dy = p.y - 1.1;
+    p.x = sg * (0.222 + dx * c + dy * sn);
+    p.y = 1.1 - dx * sn + dy * c;
+  };
+  for (const p of parts) warpGeometry(p.geo, armPose);
+
+  // ---- proportions matched to the reference skeleton (front/back photographs) ----
+  const proportions = (p) => {
+    const ax = Math.abs(p.x), sg = Math.sign(p.x) || 1;
+    // longer upper arm: everything below mid-humerus moves down 3.5 cm
+    const arm = smooth(0.16, 0.178, ax) * (1 - smooth(1.36, 1.42, p.y));
+    p.y -= 0.035 * arm * smooth(1.32, 1.12, p.y);
+    // smaller head on a longer neck: the head is shortened toward its crown
+    p.y += 0.12 * (1.745 - p.y) * smooth(1.42, 1.55, p.y) * (p.y < 1.745 ? 1 : 0);
+    // wider rib cage, narrower iliac wings (trunk only, arms excluded)
+    const trunk = 1 - smooth(0.15, 0.175, ax);
+    const chest = smooth(1.1, 1.2, p.y) * (1 - smooth(1.4, 1.47, p.y));
+    const wings = smooth(0.925, 0.975, p.y) * (1 - smooth(1.06, 1.1, p.y));
+    p.x = sg * ax * (1 + trunk * (0.08 * chest - 0.09 * wings));
+  };
+  for (const p of parts) warpGeometry(p.geo, proportions);
+
+  // fuller muscle bellies (closer to the reference figure): push muscle surfaces out along their normals
+  for (const p of parts) {
+    if (p.cat !== 'muscles' || p.color !== undefined || p.key === 'diaphragm') continue;
+    const pos = p.geo.attributes.position, nor = p.geo.attributes.normal;
+    const k = ['frontalis', 'orbicularisOculi', 'orbicularisOris', 'zygomaticus', 'intercostals', 'infrahyoid'].includes(p.key) ? 0.0008 : 0.0028;
+    for (let i = 0; i < pos.count; i++) pos.setXYZ(i, pos.getX(i) + nor.getX(i) * k, pos.getY(i) + nor.getY(i) * k, pos.getZ(i) + nor.getZ(i) * k);
+    p.geo.computeVertexNormals();
+  }
   return parts;
 }

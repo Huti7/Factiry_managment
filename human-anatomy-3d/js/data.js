@@ -252,6 +252,11 @@ export const INFO = {
     desc: 'The largest and most superficial flat muscle on the side of the abdomen. It twists and bends the trunk and compresses the abdomen.',
     facts: ['Its fibres run down and forward, like hands in your front pockets.', 'Its lower edge forms the inguinal ligament.', 'It works with the opposite internal oblique to rotate the trunk.'],
   },
+  internalOblique: {
+    name: 'Internal oblique', latin: 'Musculus obliquus internus abdominis', region: 'trunk', view: 'side',
+    desc: 'The middle layer of the flat abdominal muscles, lying under the external oblique. Its fibres run up and forward at right angles to the external oblique.',
+    facts: ['It rotates the trunk to the same side (the external oblique rotates it to the opposite side).', 'It helps compress the abdomen when coughing or lifting.', 'In males its lowest fibres form the cremaster muscle around the spermatic cord.'],
+  },
   latissimusDorsi: {
     name: 'Latissimus dorsi', latin: 'Musculus latissimus dorsi', region: 'trunk', view: 'back',
     desc: 'The broadest muscle of the back. It pulls the arm down and back and rotates it inward – the main muscle for pull-ups and swimming.',

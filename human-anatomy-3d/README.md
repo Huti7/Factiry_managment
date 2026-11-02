@@ -1,6 +1,6 @@
 # Anatomica 3D – Interactive Human Anatomy
 
-A 3D human anatomy website with a beige theme. It shows the **skeleton (34 bone groups)**, the **muscular system (55 muscles and tendons)** and the **nervous system (20 structures)** for a **male** and a **female** body.
+A 3D human anatomy website with a beige theme. It shows the **skeleton (34 bone groups)**, the **muscular system (56 muscles and tendons)** and the **nervous system (20 structures)** for a **male** and a **female** body.
 
 ## Features
 - **3D Body Explorer**: rotate, zoom and pan the full body. Turn each system on or off and change its opacity. Use X-ray mode to see through layers.
