@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from '../lib/OrbitControls.js';
-import { buildBody } from './anatomy.js';
+import { loadAnatomy, femaleFrom } from './model.js';
 import { INFO, CATEGORIES, REGIONS } from './data.js';
 
 // ---------------------------------------------------------------------------
@@ -30,7 +30,7 @@ const state = {
 };
 
 const modelCache = {};
-const getParts = (sex) => (modelCache[sex] ||= buildBody(sex));
+const getParts = (sex) => (modelCache[sex] ||= femaleFrom(modelCache.male));
 let KEYS = {};
 function indexKeys(parts) {
   KEYS = {};
@@ -647,15 +647,22 @@ function loop(now) {
 // ---------------------------------------------------------------------------
 // boot
 // ---------------------------------------------------------------------------
-setTimeout(() => {
+(async () => {
+  try {
+    modelCache.male = await loadAnatomy('model/', (f) => { $('#loading p').textContent = `Loading the human body… ${Math.round(f * 100)}%`; });
+  } catch (err) {
+    $('#loading p').textContent = 'Could not load the 3D model. Please serve this folder with a web server (see README).';
+    console.error(err);
+    return;
+  }
   loadModel();
   resize();
   requestAnimationFrame(loop);
   setLoading(false);
   window.appReady = true;
-  // warm up the female model in the background so switching is instant
+  // prepare the female model in the background so switching is instant
   setTimeout(() => getParts('female'), 1500);
-}, 20);
+})();
 
 // test hooks
 window.__anatomy = { state, select: (key) => select(meshes.map((m) => m.userData.part).find((p) => p.key === key && p.side !== 'R'), true), openContext, switchView, meshes: () => meshes };

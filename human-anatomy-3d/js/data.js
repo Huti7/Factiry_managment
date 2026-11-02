@@ -179,6 +179,17 @@ export const INFO = {
     facts: ['Each foot has 26 bones – together the feet contain about a quarter of all bones in the body.', 'The big toe carries much of the push-off force when walking.', 'The small toe\'s middle and distal phalanges are often fused.'],
   },
 
+  costalCartilages: {
+    name: 'Costal cartilages', latin: 'Cartilagines costales', region: 'trunk', view: 'front',
+    desc: 'Bars of hyaline cartilage that join the front ends of the ribs to the sternum. They give the rib cage its springiness.',
+    facts: ['They let the chest expand during breathing.', 'They often calcify (turn bony) with age.', 'Ribs 8–10 share cartilages that form the curved costal margin.'],
+  },
+  discs: {
+    name: 'Intervertebral discs', latin: 'Disci intervertebrales', region: 'trunk', view: 'side',
+    desc: 'Fibrocartilage cushions between the vertebral bodies. Each has a tough outer ring (annulus fibrosus) and a soft gel-like core (nucleus pulposus).',
+    facts: ['They make up about a quarter of the length of the spine.', 'You are about 1 cm taller in the morning because the discs re-hydrate overnight.', 'A "slipped disc" is a herniation of the soft core that can press on a nerve.'],
+  },
+
   // ============================ MUSCLES ============================
   frontalis: {
     name: 'Frontalis', latin: 'Venter frontalis m. occipitofrontalis', region: 'head', view: 'front',
@@ -363,9 +374,100 @@ export const INFO = {
     facts: ['It prevents the toes from dragging while walking.', 'Weakness causes "foot drop".', 'Shin splints often involve this muscle.'],
   },
   fibularisLongus: {
-    name: 'Fibularis (peroneus) longus', latin: 'Musculus fibularis longus', region: 'lower', view: 'side',
+    name: 'Fibularis (peroneus) longus & brevis', latin: 'Musculi fibulares longus et brevis', region: 'lower', view: 'side',
     desc: 'A muscle on the outer side of the lower leg. It turns the sole outward (eversion) and supports the arches of the foot.',
     facts: ['Its tendon passes behind the outer ankle and crosses under the sole of the foot.', 'It helps prevent ankle sprains.', 'Supplied by the superficial fibular nerve.'],
+  },
+
+  orbicularisOris: {
+    name: 'Orbicularis oris', latin: 'Musculus orbicularis oris', region: 'head', view: 'front',
+    desc: 'The ring of muscle around the lips. It closes and purses the mouth.',
+    facts: ['It is used for kissing, whistling and playing wind instruments.', 'It is the hub where many facial muscles meet.', 'Supplied by the facial nerve.'],
+  },
+  scalenes: {
+    name: 'Scalenes', latin: 'Musculi scaleni', region: 'neck', view: 'side',
+    desc: 'Three muscles (anterior, middle and posterior) on the side of the neck running to the first two ribs. They bend the neck and lift the ribs.',
+    facts: ['They are accessory muscles of breathing.', 'The brachial plexus passes between the anterior and middle scalenes.', 'Tight scalenes can compress nerves to the arm (thoracic outlet syndrome).'],
+  },
+  levatorScapulae: {
+    name: 'Levator scapulae', latin: 'Musculus levator scapulae', region: 'neck', view: 'back',
+    desc: 'A strap-like muscle at the back and side of the neck that lifts the shoulder blade.',
+    facts: ['Its name means "lifter of the scapula".', 'It is a common source of neck stiffness.', 'It runs from the upper cervical vertebrae to the superior angle of the scapula.'],
+  },
+  spleniusCapitis: {
+    name: 'Splenius capitis', latin: 'Musculus splenius capitis', region: 'neck', view: 'back',
+    desc: 'A broad muscle at the back of the neck. It extends the head and turns it to the same side.',
+    facts: ['Its name comes from the Greek for "bandage".', 'It lies under the trapezius and sternocleidomastoid.', 'Whiplash injuries often strain it.'],
+  },
+  infrahyoid: {
+    name: 'Infrahyoid (strap) muscles', latin: 'Musculi infrahyoidei', region: 'neck', view: 'front',
+    desc: 'Thin, ribbon-like muscles in the front of the neck (such as sternohyoid) that pull the hyoid bone and larynx down after swallowing.',
+    facts: ['There are four on each side: sternohyoid, sternothyroid, thyrohyoid and omohyoid.', 'They help with swallowing and speaking.', 'Surgeons move them aside to reach the thyroid gland.'],
+  },
+  rhomboids: {
+    name: 'Rhomboids', latin: 'Musculi rhomboidei', region: 'trunk', view: 'back',
+    desc: 'Rhombus-shaped muscles between the spine and the shoulder blade. They pull the shoulder blades together.',
+    facts: ['They have a major and a minor part.', 'They lie underneath the trapezius.', 'Good posture depends on them.'],
+  },
+  supraspinatus: {
+    name: 'Supraspinatus', latin: 'Musculus supraspinatus', region: 'upper', view: 'back',
+    desc: 'A rotator cuff muscle above the spine of the scapula. It starts lifting the arm out to the side and holds the humerus in its socket.',
+    facts: ['It is the most commonly torn rotator cuff tendon.', 'Its tendon passes under the acromion, where it can be pinched (impingement).', 'It is one of the four "SITS" rotator cuff muscles.'],
+  },
+  infraspinatus: {
+    name: 'Infraspinatus', latin: 'Musculus infraspinatus', region: 'upper', view: 'back',
+    desc: 'A thick triangular rotator cuff muscle below the spine of the scapula. It rotates the arm outward and stabilises the shoulder.',
+    facts: ['It is the main external rotator of the shoulder.', 'It is heavily used in throwing sports.', 'It is supplied by the suprascapular nerve.'],
+  },
+  teresMinor: {
+    name: 'Teres minor', latin: 'Musculus teres minor', region: 'upper', view: 'back',
+    desc: 'A small rotator cuff muscle along the outer border of the scapula. It rotates the arm outward.',
+    facts: ['"Teres" means rounded.', 'It is supplied by the axillary nerve.', 'It works together with the infraspinatus.'],
+  },
+  teresMajor: {
+    name: 'Teres major', latin: 'Musculus teres major', region: 'upper', view: 'back',
+    desc: 'A thick muscle from the lower angle of the scapula to the front of the humerus. It pulls the arm down and back and rotates it inward.',
+    facts: ['It is nicknamed "lat\'s little helper".', 'It is not part of the rotator cuff.', 'It forms part of the back wall of the armpit.'],
+  },
+  intercostals: {
+    name: 'Intercostal muscles', latin: 'Musculi intercostales', region: 'trunk', view: 'side',
+    desc: 'Thin layers of muscle filling the spaces between the ribs. They move the ribs during breathing and stiffen the chest wall.',
+    facts: ['There are external, internal and innermost layers.', 'External intercostals help breathe in; internal ones help breathe out forcefully.', 'Intercostal nerves and vessels run between the layers.'],
+  },
+  tensorFasciaeLatae: {
+    name: 'Tensor fasciae latae', latin: 'Musculus tensor fasciae latae', region: 'lower', view: 'side',
+    desc: 'A small muscle at the front-outer hip. It tightens the iliotibial band and helps flex and abduct the hip.',
+    facts: ['It helps keep the knee stable while walking.', 'It works closely with the gluteus maximus.', 'It is often tight in runners.'],
+  },
+  iliotibialBand: {
+    name: 'Iliotibial band', latin: 'Tractus iliotibialis', region: 'lower', view: 'side',
+    desc: 'A thick band of fibrous tissue running down the outside of the thigh from the hip to the tibia. It stabilises the hip and knee.',
+    facts: ['IT band syndrome causes pain on the outside of the knee in runners and cyclists.', 'It is a thickening of the fascia lata that wraps the thigh.', 'It can be felt as a firm strip on the side of the thigh.'],
+  },
+  patellarLigament: {
+    name: 'Quadriceps tendon & patellar ligament', latin: 'Ligamentum patellae', region: 'lower', view: 'front',
+    desc: 'The strong tendon that connects the quadriceps to the kneecap and continues from the kneecap to the tibial tuberosity.',
+    facts: ['A doctor taps it with a hammer to test the knee-jerk reflex.', 'It transmits all the force of the quadriceps.', 'Its middle third is often used to rebuild a torn ACL.'],
+  },
+  semimembranosus: {
+    name: 'Semimembranosus', latin: 'Musculus semimembranosus', region: 'lower', view: 'back',
+    desc: 'The deepest and broadest of the inner hamstrings. It bends the knee and extends the hip.',
+    facts: ['It is named after its flat, membrane-like upper tendon.', 'It lies beneath the semitendinosus.', 'It helps stabilise the back of the knee.'],
+  },
+  extensorDigitorumLongus: {
+    name: 'Extensor digitorum longus', latin: 'Musculus extensor digitorum longus', region: 'lower', view: 'front',
+    desc: 'A muscle on the front of the leg whose four tendons fan out over the top of the foot to lift toes 2–5.',
+    facts: ['Its tendons are easy to see when you lift your toes.', 'It also helps lift the foot.', 'Supplied by the deep fibular nerve.'],
+  },
+  handMuscles: {
+    name: 'Hand muscles', latin: 'Musculi manus', region: 'upper', view: 'front',
+    desc: 'The small intrinsic muscles of the hand: the thenar group (thumb ball), the hypothenar group (little-finger side) and the interossei and lumbricals between the bones.',
+    facts: ['They control fine finger movements such as writing.', 'The thenar muscles make the human opposable thumb possible.', 'Wasting of the thenar eminence is a sign of carpal tunnel syndrome.'],
+  },
+  footMuscles: {
+    name: 'Foot muscles', latin: 'Musculi pedis', region: 'lower', view: 'side',
+    desc: 'The intrinsic muscles of the foot, such as abductor hallucis, flexor digitorum brevis and extensor digitorum brevis. They support the arches and move the toes.',
+    facts: ['The sole has four layers of muscles.', 'They work constantly to keep you balanced.', 'Weak foot muscles are linked to flat feet.'],
   },
 
   // ============================ NERVOUS SYSTEM ============================

@@ -1,6 +1,6 @@
 # Anatomica 3D – Interactive Human Anatomy
 
-A 3D human anatomy website with a beige theme. It shows the **skeleton (32 bone groups)**, the **muscular system (37 muscles)** and the **nervous system (20 structures)** for a **male** and a **female** body.
+A 3D human anatomy website with a beige theme. It shows the **skeleton (34 bone groups)**, the **muscular system (55 muscles and tendons)** and the **nervous system (20 structures)** for a **male** and a **female** body.
 
 ## Features
 - **3D Body Explorer**: rotate, zoom and pan the full body. Turn each system on or off and change its opacity. Use X-ray mode to see through layers.
@@ -18,11 +18,26 @@ python3 -m http.server 8000
 # open http://localhost:8000
 ```
 
-three.js r160 is included in `lib/` (MIT licence), so the app works offline apart from the Google Fonts.
+three.js r160 and the meshoptimizer decoder are included in `lib/` (MIT licences), so the app works offline apart from the Google Fonts.
+
+## How the 3D model is made
+The bones and muscles are sculpted in code as smoothly blended shapes (signed distance fields). Bones are built from their real landmarks: condyles, tubercles, sockets, foramina and processes. Muscles are built from many fibre bundles that run from origin to insertion. The result is turned into a mesh, simplified and compressed into `model/anatomy.bin`, which the page loads in about a second.
+
+To change the anatomy, edit `js/anatomy.js` and rebuild the model:
+
+```bash
+cd tools
+npm install
+npm run build
+```
 
 ## Files
 - `index.html`, `css/style.css`: the page layout and the beige theme
-- `js/anatomy.js`: builds the 3D model of the bones, muscles and nerves, plus the female proportions
+- `js/anatomy.js`: sculpts the bones, muscles and nerves (used by the build tool)
+- `js/sdf.js`: the shape-sculpting engine (blended shapes and mesh generation)
+- `js/model.js`, `js/warp.js`: load the built model in the browser and apply the female proportions
+- `model/`: the pre-built, compressed 3D model
+- `tools/`: the offline model build script
 - `js/geometry.js`: helper functions for tubes, sheets and ellipsoids
 - `js/data.js`: the names, descriptions and facts for every part
 - `js/app.js`: the viewer, picking, slide panels, Atlas thumbnails and full-body view
